@@ -10,11 +10,15 @@
 .. image:: https://codecov.io/gh/jwodder/ghreq/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/jwodder/ghreq
 
+.. image:: https://img.shields.io/pypi/pyversions/ghreq.svg
+    :target: https://pypi.org/project/ghreq/
+
 .. image:: https://img.shields.io/github/license/jwodder/ghreq.svg
     :target: https://opensource.org/licenses/MIT
     :alt: MIT License
 
 `GitHub <https://github.com/jwodder/ghreq>`_
+| `PyPI <https://pypi.org/project/ghreq/>`_
 | `Issues <https://github.com/jwodder/ghreq/issues>`_
 
 ``ghreq`` is a simple wrapper around requests_ with various customizations
