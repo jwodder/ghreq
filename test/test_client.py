@@ -1,6 +1,7 @@
 from __future__ import annotations
 from math import isclose
 import sys
+from time import sleep
 import pytest
 from pytest_mock import MockerFixture
 import requests
@@ -593,3 +594,138 @@ def test_custom_session() -> None:
         session=s,
     ) as client:
         assert client.get("/greet") == {"hello": "world"}
+
+
+@responses.activate
+def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
+    responses.post(
+        "https://github.example.com/api/widgets",
+        json={"name": "Widgey", "color": "blue", "id": 1},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+            responses.matchers.json_params_matcher({"name": "Widgey", "color": "blue"}),
+        ),
+    )
+    responses.patch(
+        "https://github.example.com/api/widgets/1",
+        json={"name": "Widgey", "color": "red", "id": 1},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+            responses.matchers.json_params_matcher({"color": "red"}),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/widgets",
+        json=[{"name": "Widgey", "color": "blue", "id": 1}],
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.put(
+        "https://github.example.com/api/widgets/1/flavors",
+        json={
+            "name": "Widgey",
+            "color": "red",
+            "id": 1,
+            "flavors": ["spicy", "sweet"],
+        },
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+            responses.matchers.json_params_matcher(["spicy", "sweet"]),
+        ),
+    )
+    responses.put(
+        "https://github.example.com/api/widgets/1/flavors",
+        json={
+            "name": "Widgey",
+            "color": "red",
+            "id": 1,
+            "flavors": ["spicy", "sweet", "sour", "bitter"],
+        },
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+            responses.matchers.json_params_matcher(["sour", "bitter"]),
+        ),
+    )
+    responses.delete(
+        "https://github.example.com/api/widgets/1",
+        status=204,
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.post("/widgets", {"name": "Widgey", "color": "blue"}) == {
+            "name": "Widgey",
+            "color": "blue",
+            "id": 1,
+        }
+        m.assert_not_called()
+        assert client.patch("/widgets/1", {"color": "red"}) == {
+            "name": "Widgey",
+            "color": "red",
+            "id": 1,
+        }
+        m.assert_called_once()
+        assert isclose(m.call_args.args[0], 1.0, rel_tol=0.3, abs_tol=0.1)
+        m.reset_mock()
+        assert client.get("/widgets") == [{"name": "Widgey", "color": "blue", "id": 1}]
+        m.assert_not_called()
+        sleep(0.5)
+        assert client.put("/widgets/1/flavors", ["spicy", "sweet"]) == {
+            "name": "Widgey",
+            "color": "red",
+            "id": 1,
+            "flavors": ["spicy", "sweet"],
+        }
+        m.assert_called_once()
+        assert isclose(m.call_args.args[0], 0.5, rel_tol=0.3, abs_tol=0.1)
+        m.reset_mock()
+        sleep(2)
+        assert client.put("/widgets/1/flavors", ["sour", "bitter"]) == {
+            "name": "Widgey",
+            "color": "red",
+            "id": 1,
+            "flavors": ["spicy", "sweet", "sour", "bitter"],
+        }
+        m.assert_not_called()
+        assert client.delete("/widgets/1") is None
+        m.assert_called_once()
+        assert isclose(m.call_args.args[0], 1.0, rel_tol=0.3, abs_tol=0.1)
