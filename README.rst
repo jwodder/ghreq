@@ -169,7 +169,7 @@ the method return the actual ``requests.Response`` object instead, pass
 The remaining arguments have the same meaning as in ``requests``.
 
 If the request fails, it may be retried with exponentially increasing wait
-times between attempts; see the documentation of RetryConfig below.  If all
+times between attempts; see the documentation of ``RetryConfig`` below.  If all
 retries are exhausted without success, the exception from the final request is
 raised.
 
@@ -387,5 +387,5 @@ and the implemention & version of Python.
 
     get_github_api_url() -> str
 
-If the ``GITHUB_API_URL`` environment variable is set to a nonempty string, the
-string is returned; otherwise, ``DEFAULT_API_URL`` is returned.
+If the ``GITHUB_API_URL`` environment variable is set to a nonempty string,
+that string is returned; otherwise, ``DEFAULT_API_URL`` is returned.
