@@ -571,3 +571,25 @@ def test_get_full_url(mocker: MockerFixture) -> None:
             "http://github.example.org/api/greet", params={"whom": "octocat"}
         ) == {"hello": "octocat"}
     m.assert_not_called()
+
+
+@responses.activate
+def test_custom_session() -> None:
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"hello": "world"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher({"X-Custom": "yes"}),
+        ),
+    )
+    s = requests.Session()
+    s.headers["X-Custom"] = "yes"
+    with GitHub(
+        token="hunter2",
+        api_url="https://github.example.com/api",
+        user_agent="Test/0.0.0",
+        api_version="2525-01-01",
+        session=s,
+    ) as client:
+        assert client.get("/greet") == {"hello": "world"}
