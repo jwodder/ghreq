@@ -80,7 +80,7 @@ DEFAULT_API_VERSION = "2022-11-28"
 MUTATING_METHODS = frozenset(["POST", "PATCH", "PUT", "DELETE"])
 
 if TYPE_CHECKING:
-    from typing import Union
+    from typing import IO, List, Tuple, Union
     from typing_extensions import TypeAlias
 
     ParamsValue: TypeAlias = Union[
@@ -88,6 +88,9 @@ if TYPE_CHECKING:
     ]
     ParamsType: TypeAlias = Union[Mapping[str, ParamsValue], None]
     HeadersType: TypeAlias = Union[Mapping[str, Union[str, bytes, None]], None]
+    DataType: TypeAlias = Union[
+        Iterable[bytes], str, bytes, IO, List[Tuple[Any, Any]], Mapping[Any, Any], None
+    ]
 
 
 class GitHub:
@@ -203,7 +206,7 @@ class GitHub:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -332,7 +335,7 @@ class GitHub:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -358,7 +361,7 @@ class GitHub:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -384,7 +387,7 @@ class GitHub:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -410,7 +413,7 @@ class GitHub:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -534,7 +537,7 @@ class Endpoint:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -567,7 +570,7 @@ class Endpoint:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -587,7 +590,7 @@ class Endpoint:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -607,7 +610,7 @@ class Endpoint:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -627,7 +630,7 @@ class Endpoint:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:

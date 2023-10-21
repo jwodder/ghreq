@@ -141,7 +141,7 @@ to obtain an ``Endpoint`` instance that makes requests to the URL formed from
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
@@ -198,7 +198,7 @@ information.
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
@@ -214,7 +214,7 @@ information.
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
@@ -230,7 +230,7 @@ information.
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
@@ -246,7 +246,7 @@ information.
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        data: bytes | None = None,
+        data: DataType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
