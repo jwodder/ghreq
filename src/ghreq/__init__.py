@@ -53,7 +53,7 @@ class GitHub:
     def __init__(
         self,
         *,
-        token: str | None,
+        token: str | None = None,
         api_url: str = DEFAULT_API_URL,
         session: requests.Session | None = None,
         user_agent: str | None = None,
