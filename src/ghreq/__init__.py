@@ -25,6 +25,7 @@ __license__ = "MIT"
 __url__ = "https://github.com/jwodder/ghreq"
 
 __all__ = [
+    "Endpoint",
     "GitHub",
     "PrettyHTTPError",
     "RetryConfig",
@@ -501,7 +502,7 @@ class RetryConfig:
             return self.backoff_factor * 0.1
         b = self.backoff_factor * self.backoff_base ** (attempts - 1)
         if self.backoff_jitter > 0:
-            b *= random() * self.backoff_jitter
+            b += random() * self.backoff_jitter
         return max(0, min(b, self.backoff_max))
 
 
