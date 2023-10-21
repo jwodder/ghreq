@@ -121,8 +121,8 @@ Constructor arguments:
 
 ``retry_config``
     Configuration for the request retrying mechanism.  If not set, a
-    ``RetryConfig`` instance with all default attributes will be used; `see
-    below <RetryConfig_>`_.
+    ``RetryConfig`` instance with all default attributes will be used; see
+    below.
 
 ``GitHub`` instances can be used as context managers, in which case they close
 their internal ``requests.Session`` instances on exit (regardless of whether
@@ -130,7 +130,7 @@ the session was user-provided or not).
 
 A ``GitHub`` instance can be "divided" by a string (e.g., ``client / "user"``)
 to obtain an ``Endpoint`` instance that makes requests to the URL formed from
-``api_url`` and the "divisor"; `see below <endpoint_>`_.
+``api_url`` and the "divisor"; see below.
 
 .. code:: python
 
@@ -169,7 +169,7 @@ the method return the actual ``requests.Response`` object instead, pass
 The remaining arguments have the same meaning as in ``requests``.
 
 If the request fails, it may be retried with exponentially increasing wait
-times between attempts; see the documentation of RetryConfig_ below.  If all
+times between attempts; see the documentation of RetryConfig below.  If all
 retries are exhausted without success, the exception from the final request is
 raised.
 
@@ -276,8 +276,6 @@ which case the elements of that list are yielded); otherwise, an error occurs.
 If ``raw`` is ``True``, then instead of yielding each page's items, the
 returned iterator will yield each page as a ``requests.Response`` object.
 
-.. _endpoint:
-
 .. code:: python
 
     class Endpoint:
@@ -307,8 +305,6 @@ following are equivalent:
     (client / "repos/octocat/hello-world").get()
 
     (client / "repos" / "octocat" / "hello-world").get()
-
-.. _RetryConfig:
 
 .. code:: python
 
