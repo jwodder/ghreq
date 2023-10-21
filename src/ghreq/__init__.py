@@ -56,8 +56,8 @@ __license__ = "MIT"
 __url__ = "https://github.com/jwodder/ghreq"
 
 __all__ = [
+    "Client",
     "Endpoint",
-    "GitHub",
     "PrettyHTTPError",
     "RetryConfig",
     "get_github_api_url",
@@ -66,14 +66,14 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
-#: The value the :mailheader:`Accept` header is set to when `GitHub` constructs
+#: The value the :mailheader:`Accept` header is set to when `Client` constructs
 #: a new `requests.Session` instance
 DEFAULT_ACCEPT = "application/vnd.github+json"
 
-#: The default value of the ``api_url`` argument to the `GitHub` constructor
+#: The default value of the ``api_url`` argument to the `Client` constructor
 DEFAULT_API_URL = "https://api.github.com"
 
-#: The default value of the ``api_version`` argument to the `GitHub`
+#: The default value of the ``api_version`` argument to the `Client`
 #: constructor
 DEFAULT_API_VERSION = "2022-11-28"
 
@@ -93,16 +93,16 @@ if TYPE_CHECKING:
     ]
 
 
-class GitHub:
+class Client:
     """
-    A client class for interacting with the GitHub REST API (or sufficiently
-    similar APIs).
+    An HTTP client class for interacting with the GitHub REST API (or
+    sufficiently similar APIs).
 
-    `GitHub` instances can be used as context managers, in which case they
+    `Client` instances can be used as context managers, in which case they
     close their internal `requests.Session` instances on exit (regardless of
     whether the session was user-provided or not).
 
-    A `GitHub` instance can be "divided" by a string (e.g., ``client /
+    A `Client` instance can be "divided" by a string (e.g., ``client /
     "user"``) to obtain an `Endpoint` instance that makes requests to the URL
     formed from ``api_url`` and the "divisor"; see below.
     """
@@ -129,7 +129,7 @@ class GitHub:
 
         :param session:
             A pre-configured `requests.Session` instance to use for making
-            requests.  If no session is supplied, `GitHub` instantiates a new
+            requests.  If no session is supplied, `Client` instantiates a new
             session and sets the following request headers on it.  (These
             headers are not set on sessions passed to the constructor.)
 
@@ -184,7 +184,7 @@ class GitHub:
         self.retry_config = retry_config
         self.last_mutation: datetime | None = None
 
-    def __enter__(self) -> GitHub:
+    def __enter__(self) -> Client:
         return self
 
     def __exit__(
@@ -499,15 +499,15 @@ class GitHub:
 @dataclass
 class Endpoint:
     """
-    A combination of a `GitHub` instance and a URL.  `Endpoint` has
+    A combination of a `Client` instance and a URL.  `Endpoint` has
     `request()`, `get()`, `post()`, `put()`, `patch()`, `delete()`, and
-    `paginate()` methods that work the same way as for `GitHub`, except that
+    `paginate()` methods that work the same way as for `Client`, except that
     `Endpoint`'s methods do not take ``path`` arguments; instead, they make
     requests to the stored URL.  This is useful if you find yourself making
     requests to the same URL and/or paths under the same URL over & over.
 
     An `Endpoint` instance is constructed by applying the ``/`` (division)
-    operator to a `GitHub` or `Endpoint` instance on the left and a string on
+    operator to a `Client` or `Endpoint` instance on the left and a string on
     the right.  If the string begins with ``http://`` or ``https://``, it is
     used as-is for the URL of the resulting `Endpoint`.  Otherwise, the string
     is appended to the ``api_url`` or ``url`` attribute of the object on the
@@ -524,7 +524,7 @@ class Endpoint:
         (client / "repos" / "octocat" / "hello-world").get()
     """
 
-    client: GitHub
+    client: Client
     url: str
 
     def __truediv__(self, path: str) -> Endpoint:

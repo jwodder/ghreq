@@ -10,7 +10,7 @@ import responses
 from ghreq import (
     DEFAULT_ACCEPT,
     DEFAULT_API_VERSION,
-    GitHub,
+    Client,
     PrettyHTTPError,
     RetryConfig,
     nowdt,
@@ -91,7 +91,7 @@ def test_get(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.get("/greet") == {"hello": "world"}
         assert client.get("/greet", params={"whom": "octocat"}) == {"hello": "octocat"}
         r = client.get(
@@ -142,7 +142,7 @@ def test_header_args() -> None:
             ),
         ),
     )
-    with GitHub(
+    with Client(
         token="hunter2",
         api_url="https://github.example.com/api",
         user_agent="Test/0.0.0",
@@ -165,7 +165,7 @@ def test_header_args() -> None:
             responses.matchers.header_matcher({"Accept": DEFAULT_ACCEPT}),
         ),
     )
-    with GitHub(api_version=None) as client:
+    with Client(api_version=None) as client:
         assert client.get("/greet") == {"hello": "world"}
 
 
@@ -186,7 +186,7 @@ def test_status_error_json(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         with pytest.raises(PrettyHTTPError) as exc:
             client.get("coffee")
         # responses fills in HTTP reasons from the http.client module, which
@@ -225,7 +225,7 @@ def test_status_error_not_json(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         with pytest.raises(PrettyHTTPError) as exc:
             client.get("coffee.html", headers={"Accept": "text/html"})
         assert str(exc.value) == (
@@ -275,7 +275,7 @@ def test_post(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.post("/widgets", {"name": "Widgey", "color": "blue"}) == {
             "name": "Widgey",
             "color": "blue",
@@ -310,7 +310,7 @@ def test_put(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.put("/widgets/1/flavors", ["spicy", "sweet"]) == {
             "name": "Widgey",
             "color": "blue",
@@ -337,7 +337,7 @@ def test_patch(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.patch("/widgets/1", {"color": "red"}) == {
             "name": "Widgey",
             "color": "red",
@@ -362,7 +362,7 @@ def test_delete(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.delete("/widgets/1") is None
     m.assert_not_called()
 
@@ -426,7 +426,7 @@ def test_paginate_list(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert list(client.paginate("/widgets", params={"superfluous": "yes"})) == [
             {"name": "Widgey", "color": "blue", "id": 1},
             {"name": "Pidgey", "color": "tawny", "id": 2},
@@ -496,7 +496,7 @@ def test_paginate_dict(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert list(
             client.paginate(
                 "/search/widgets", params={"superfluous": "yes", "q": "is:widgety"}
@@ -566,7 +566,7 @@ def test_paginate_raw(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         pages = list(
             client.paginate(
                 "/search/widgets",
@@ -619,7 +619,7 @@ def test_paginate_no_links(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert list(client.paginate("/widgets", params={"superfluous": "yes"})) == [
             {"name": "Widgey", "color": "blue", "id": 1},
             {"name": "Pidgey", "color": "tawny", "id": 2},
@@ -658,7 +658,7 @@ def test_get_full_url(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.get("https://github.example.net/api/greet") == {"hello": "world"}
         assert client.get(
             "http://github.example.org/api/greet", params={"whom": "octocat"}
@@ -678,7 +678,7 @@ def test_custom_session() -> None:
     )
     s = requests.Session()
     s.headers["X-Custom"] = "yes"
-    with GitHub(
+    with Client(
         token="hunter2",
         api_url="https://github.example.com/api",
         user_agent="Test/0.0.0",
@@ -791,7 +791,7 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
 
     m = mocker.patch("time.sleep", side_effect=advance_clock)
     mocker.patch("ghreq.nowdt", side_effect=lambda: now)
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.post("/widgets", {"name": "Widgey", "color": "blue"}) == {
             "name": "Widgey",
             "color": "blue",
@@ -861,7 +861,7 @@ def test_retry_5xx(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.get("/flakey") == {"worth_it": False}
     assert m.call_count == 6
     expected = [0.1, 1.25, 1.25**2, 1.25**3, 1.25**4, 1.25**5]
@@ -887,7 +887,7 @@ def test_retries_exhausted(mocker: MockerFixture) -> None:
             ),
         )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         with pytest.raises(PrettyHTTPError) as exc:
             client.get("/flakey")
         assert str(exc.value) == (
@@ -932,7 +932,7 @@ def test_retry_request_errors(mocker: MockerFixture) -> None:
     )
     m = mocker.patch("time.sleep")
     cfg = RetryConfig(backoff_factor=3, backoff_base=2)
-    with GitHub(api_url="https://github.example.com/api", retry_config=cfg) as client:
+    with Client(api_url="https://github.example.com/api", retry_config=cfg) as client:
         assert client.get("/flakey") == {"worth_it": False}
     assert m.call_count == 4
     expected = [0.3, 6, 12, 24]
@@ -944,7 +944,7 @@ def test_retry_request_errors(mocker: MockerFixture) -> None:
 @responses.activate
 def test_no_retry_request_value_error(mocker: MockerFixture) -> None:
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="scheme://github.lisp") as client:
+    with Client(api_url="scheme://github.lisp") as client:
         with pytest.raises(requests.exceptions.InvalidSchema):
             client.get("/flakey")
     m.assert_not_called()
@@ -980,7 +980,7 @@ def test_403_retry_after(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.get("/greet") == {"hello": "world"}
     m.assert_called_once()
     assert isclose(m.call_args.args[0], 7, rel_tol=0.3, abs_tol=0.1)
@@ -1016,7 +1016,7 @@ def test_403_bad_retry_after(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.get("/greet") == {"hello": "world"}
     m.assert_called_once()
     assert isclose(m.call_args.args[0], 0.1, rel_tol=0.3, abs_tol=0.1)
@@ -1056,7 +1056,7 @@ def test_retry_primary_rate_limit(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.get("/greet") == {"hello": "world"}
     m.assert_called_once()
     assert isclose(m.call_args.args[0], 10, rel_tol=0.3, abs_tol=0.1)
@@ -1096,7 +1096,7 @@ def test_retry_primary_rate_limit_bad_reset(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.get("/greet") == {"hello": "world"}
     m.assert_called_once()
     assert isclose(m.call_args.args[0], 0.1, rel_tol=0.3, abs_tol=0.1)
@@ -1133,7 +1133,7 @@ def test_retry_primary_rate_limit_missing_reset(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.get("/greet") == {"hello": "world"}
     m.assert_called_once()
     assert isclose(m.call_args.args[0], 0.1, rel_tol=0.3, abs_tol=0.1)
@@ -1170,7 +1170,7 @@ def test_retry_403_rate_limit_no_headers(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert client.get("/greet") == {"hello": "world"}
     assert m.call_count == 4
     expected = [0.1, 1.25, 1.25**2, 1.25**3]
@@ -1196,7 +1196,7 @@ def test_no_retry_normal_403(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         with pytest.raises(PrettyHTTPError) as exc:
             client.get("greet")
         assert str(exc.value) == (
@@ -1241,7 +1241,7 @@ def test_retry_normal_403_in_retry_statuses(mocker: MockerFixture) -> None:
     )
     m = mocker.patch("time.sleep")
     cfg = RetryConfig(retry_statuses=[403])
-    with GitHub(api_url="https://github.example.com/api", retry_config=cfg) as client:
+    with Client(api_url="https://github.example.com/api", retry_config=cfg) as client:
         assert client.get("enter") == {"message": "Oh, wait, my mistake."}
     m.assert_called_once()
     assert isclose(m.call_args.args[0], 0.1, rel_tol=0.3, abs_tol=0.1)
@@ -1308,7 +1308,7 @@ def test_retry_intermixed_5xx_and_rate_limit(mocker: MockerFixture) -> None:
     )
     m = mocker.patch("time.sleep")
     cfg = RetryConfig(backoff_base=2)
-    with GitHub(api_url="https://github.example.com/api", retry_config=cfg) as client:
+    with Client(api_url="https://github.example.com/api", retry_config=cfg) as client:
         assert client.get("/greet") == {"hello": "world"}
     assert m.call_count == 4
     expected = [0.1, 2, 6, 8]
@@ -1356,7 +1356,7 @@ def test_retry_total_wait_exceeded(mocker: MockerFixture) -> None:
         )
 
     m = mocker.patch("time.sleep", side_effect=advance_clock)
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         with pytest.raises(PrettyHTTPError) as exc:
             client.get("greet")
         assert str(exc.value) == (
@@ -1388,7 +1388,7 @@ def test_retry_no_total_wait(mocker: MockerFixture) -> None:
         )
     m = mocker.patch("time.sleep")
     cfg = RetryConfig(backoff_base=2, total_wait=None)
-    with GitHub(api_url="https://github.example.com/api", retry_config=cfg) as client:
+    with Client(api_url="https://github.example.com/api", retry_config=cfg) as client:
         with pytest.raises(PrettyHTTPError) as exc:
             client.get("/flakey")
         assert str(exc.value) == (

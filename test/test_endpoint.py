@@ -3,7 +3,7 @@ from math import isclose
 from pytest_mock import MockerFixture
 import requests
 import responses
-from ghreq import DEFAULT_ACCEPT, DEFAULT_API_VERSION, GitHub
+from ghreq import DEFAULT_ACCEPT, DEFAULT_API_VERSION, Client
 
 PNG = bytes.fromhex(
     "89 50 4e 47 0d 0a 1a 0a  00 00 00 0d 49 48 44 52"
@@ -80,7 +80,7 @@ def test_get(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert (client / "greet").get() == {"hello": "world"}
         assert (client / "greet").get(params={"whom": "octocat"}) == {
             "hello": "octocat"
@@ -131,7 +131,7 @@ def test_header_args() -> None:
             ),
         ),
     )
-    with GitHub(
+    with Client(
         token="hunter2",
         api_url="https://github.example.com/api",
         user_agent="Test/0.0.0",
@@ -180,7 +180,7 @@ def test_post(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert (client / "widgets").post({"name": "Widgey", "color": "blue"}) == {
             "name": "Widgey",
             "color": "blue",
@@ -215,7 +215,7 @@ def test_put(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert (client / "widgets" / "1" / "flavors").put(["spicy", "sweet"]) == {
             "name": "Widgey",
             "color": "blue",
@@ -242,7 +242,7 @@ def test_patch(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert (client / "widgets" / "1").patch({"color": "red"}) == {
             "name": "Widgey",
             "color": "red",
@@ -267,7 +267,7 @@ def test_delete(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert (client / "widgets" / "1").delete() is None
     m.assert_not_called()
 
@@ -331,7 +331,7 @@ def test_paginate_list(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert list((client / "widgets").paginate(params={"superfluous": "yes"})) == [
             {"name": "Widgey", "color": "blue", "id": 1},
             {"name": "Pidgey", "color": "tawny", "id": 2},
@@ -401,7 +401,7 @@ def test_paginate_dict(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert list(
             (client / "search" / "widgets").paginate(
                 params={"superfluous": "yes", "q": "is:widgety"}
@@ -471,7 +471,7 @@ def test_paginate_raw(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         pages = list(
             (client / "search/widgets").paginate(
                 params={"superfluous": "yes", "q": "is:widgety"}, raw=True
@@ -530,7 +530,7 @@ def test_get_full_url(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert (client / "https://github.example.net/api/greet").get() == {
             "hello": "world"
         }
@@ -582,7 +582,7 @@ def test_slashed_path(mocker: MockerFixture) -> None:
         ),
     )
     m = mocker.patch("time.sleep")
-    with GitHub(api_url="https://github.example.com/api") as client:
+    with Client(api_url="https://github.example.com/api") as client:
         assert (client / "/greet").get() == {"hello": "world"}
         assert (client / "/greet/").get() == {"hello": "world/"}
         assert (client / "/widgets/test widget").get() == {

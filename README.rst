@@ -64,7 +64,7 @@ Classes
 
 .. code:: python
 
-    class GitHub:
+    class Client:
         def __init__(
             *,
             token: str | None = None,
@@ -76,7 +76,7 @@ Classes
             retry_config: RetryConfig | None = None,
         )
 
-A client class for interacting with the GitHub REST API (or sufficiently
+An HTTP client class for interacting with the GitHub REST API (or sufficiently
 similar APIs).
 
 Constructor arguments:
@@ -91,7 +91,7 @@ Constructor arguments:
 
 ``session``
     A pre-configured ``requests.Session`` instance to use for making requests.
-    If no session is supplied, ``GitHub`` instantiates a new session and sets
+    If no session is supplied, ``Client`` instantiates a new session and sets
     the following request headers on it.  (These headers are not set on
     sessions passed to the constructor.)
 
@@ -124,17 +124,17 @@ Constructor arguments:
     ``RetryConfig`` instance with all default attributes will be used; see
     below.
 
-``GitHub`` instances can be used as context managers, in which case they close
+``Client`` instances can be used as context managers, in which case they close
 their internal ``requests.Session`` instances on exit (regardless of whether
 the session was user-provided or not).
 
-A ``GitHub`` instance can be "divided" by a string (e.g., ``client / "user"``)
+A ``Client`` instance can be "divided" by a string (e.g., ``client / "user"``)
 to obtain an ``Endpoint`` instance that makes requests to the URL formed from
 ``api_url`` and the "divisor"; see below.
 
 .. code:: python
 
-    GitHub.request(
+    Client.request(
         method: str,
         path: str,
         json: Any = None,
@@ -178,7 +178,7 @@ raised.
 
 .. code:: python
 
-    GitHub.get(
+    Client.get(
         path: str,
         *,
         params: ParamsType = None,
@@ -192,7 +192,7 @@ information.
 
 .. code:: python
 
-    GitHub.post(
+    Client.post(
         path: str,
         json: Any = None,
         *,
@@ -208,7 +208,7 @@ information.
 
 .. code:: python
 
-    GitHub.put(
+    Client.put(
         path: str,
         json: Any = None,
         *,
@@ -224,7 +224,7 @@ information.
 
 .. code:: python
 
-    GitHub.patch(
+    Client.patch(
         path: str,
         json: Any = None,
         *,
@@ -240,7 +240,7 @@ information.
 
 .. code:: python
 
-    GitHub.delete(
+    Client.delete(
         path: str,
         json: Any = None,
         *,
@@ -256,7 +256,7 @@ information.
 
 .. code:: python
 
-    GitHub.paginate(
+    Client.paginate(
         path: str,
         *,
         params: ParamsType = None,
@@ -279,18 +279,18 @@ returned iterator will yield each page as a ``requests.Response`` object.
 .. code:: python
 
     class Endpoint:
-        client: GitHub
+        client: Client
         url: str
 
-A combination of a ``GitHub`` instance and a URL.  ``Endpoint`` has
+A combination of a ``Client`` instance and a URL.  ``Endpoint`` has
 ``request()``, ``get()``, ``post()``, ``put()``, ``patch()``, ``delete()``, and
-``paginate()`` methods that work the same way as for ``GitHub``, except that
+``paginate()`` methods that work the same way as for ``Client``, except that
 ``Endpoint``'s methods do not take ``path`` arguments; instead, they make
 requests to the stored URL.  This is useful if you find yourself making
 requests to the same URL and/or paths under the same URL over & over.
 
 An ``Endpoint`` instance is constructed by applying the ``/`` (division)
-operator to a ``GitHub`` or ``Endpoint`` instance on the left and a string on
+operator to a ``Client`` or ``Endpoint`` instance on the left and a string on
 the right.  If the string begins with ``http://`` or ``https://``, it is used
 as-is for the URL of the resulting ``Endpoint``.  Otherwise, the string is
 appended to the ``api_url`` or ``url`` attribute of the object on the left,
@@ -356,20 +356,20 @@ Constants
 
     DEFAULT_ACCEPT = "application/vnd.github+json"
 
-The value the ``Accept`` header is set to when ``GitHub`` constructs a new
+The value the ``Accept`` header is set to when ``Client`` constructs a new
 ``requests.Session`` instance
 
 .. code:: python
 
     DEFAULT_API_URL = "https://api.github.com"
 
-The default value of the ``api_url`` argument to the ``GitHub`` constructor
+The default value of the ``api_url`` argument to the ``Client`` constructor
 
 .. code:: python
 
     DEFAULT_API_VERSION = "2022-11-28"
 
-The default value of the ``api_version`` argument to the ``GitHub`` constructor
+The default value of the ``api_version`` argument to the ``Client`` constructor
 
 
 Utility Functions
