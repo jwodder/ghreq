@@ -310,3 +310,24 @@ def test_patch(mocker: MockerFixture) -> None:
             "id": 1,
         }
     m.assert_not_called()
+
+
+@responses.activate
+def test_delete(mocker: MockerFixture) -> None:
+    responses.delete(
+        "https://github.example.com/api/widgets/1",
+        status=204,
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.delete("/widgets/1") is None
+    m.assert_not_called()
