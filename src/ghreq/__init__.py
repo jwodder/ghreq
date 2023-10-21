@@ -215,6 +215,26 @@ class GitHub:
             "PATCH", path, params=params, headers=headers, json=json, data=data, raw=raw
         )
 
+    def delete(
+        self,
+        path: str,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        json: Any = None,
+        data: bytes | None = None,
+        raw: bool = False,
+    ) -> Any:
+        return self.request(
+            "DELETE",
+            path,
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            raw=raw,
+        )
+
     def paginate(
         self,
         path: str,
