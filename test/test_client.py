@@ -995,3 +995,73 @@ def test_no_retry_normal_403(mocker: MockerFixture) -> None:
             "}"
         )
     m.assert_not_called()
+
+
+@responses.activate
+def test_retry_intermixed_5xx_and_rate_limit(mocker: MockerFixture) -> None:
+    for _ in range(2):
+        responses.get(
+            "https://github.example.com/api/greet",
+            status=500,
+            match=(
+                responses.matchers.query_param_matcher({}),
+                responses.matchers.header_matcher(
+                    {
+                        "Accept": "application/vnd.github+json",
+                        "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                    }
+                ),
+            ),
+        )
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"message": "You have exceeded a secondary rate limit.  Good luck."},
+        status=403,
+        headers={"Retry-After": "6"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"message": "You have exceeded a secondary rate limit.  Good luck."},
+        status=403,
+        headers={"Retry-After": "6"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"hello": "world"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    cfg = RetryConfig(backoff_base=2)
+    with GitHub(api_url="https://github.example.com/api", retry_config=cfg) as client:
+        assert client.get("/greet") == {"hello": "world"}
+    assert m.call_count == 4
+    expected = [0.1, 2, 6, 8]
+    delays = [ca.args[0] for ca in m.call_args_list]
+    for exp, actual in zip(expected, delays):
+        assert isclose(actual, exp, rel_tol=0.3, abs_tol=0.1)
