@@ -516,3 +516,40 @@ def test_paginate_no_links(mocker: MockerFixture) -> None:
             {"name": "Refridgey", "color": "green", "id": 4},
         ]
     m.assert_not_called()
+
+
+@responses.activate
+def test_get_full_url(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.net/api/greet",
+        json={"hello": "world"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "http://github.example.org/api/greet",
+        json={"hello": "octocat"},
+        match=(
+            responses.matchers.query_param_matcher({"whom": "octocat"}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.get("https://github.example.net/api/greet") == {"hello": "world"}
+        assert client.get(
+            "http://github.example.org/api/greet", params={"whom": "octocat"}
+        ) == {"hello": "octocat"}
+    m.assert_not_called()
