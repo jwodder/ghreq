@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import timedelta
 from math import isclose
 import sys
 from time import sleep, time
@@ -6,7 +7,7 @@ import pytest
 from pytest_mock import MockerFixture
 import requests
 import responses
-from ghreq import DEFAULT_API_VERSION, GitHub, PrettyHTTPError, RetryConfig
+from ghreq import DEFAULT_API_VERSION, GitHub, PrettyHTTPError, RetryConfig, nowdt
 
 PNG = bytes.fromhex(
     "89 50 4e 47 0d 0a 1a 0a  00 00 00 0d 49 48 44 52"
@@ -1065,3 +1066,55 @@ def test_retry_intermixed_5xx_and_rate_limit(mocker: MockerFixture) -> None:
     delays = [ca.args[0] for ca in m.call_args_list]
     for exp, actual in zip(expected, delays):
         assert isclose(actual, exp, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_retry_total_wait_exceeded(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/greet",
+        status=403,
+        headers={"Retry-After": "600"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/greet",
+        body="Hold on, it's almost ready.\n",
+        status=403,
+        headers={"Retry-After": "2"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    start = nowdt()
+
+    def advance_clock(duration: float) -> None:
+        mocker.patch(
+            "ghreq.nowdt", return_value=start + timedelta(seconds=duration + 1)
+        )
+
+    m = mocker.patch("time.sleep", side_effect=advance_clock)
+    with GitHub(api_url="https://github.example.com/api") as client:
+        with pytest.raises(PrettyHTTPError) as exc:
+            client.get("greet")
+        assert str(exc.value) == (
+            "403 Client Error: Forbidden for URL:"
+            " https://github.example.com/api/greet\n"
+            "\n"
+            "Hold on, it's almost ready.\n"
+        )
+    m.assert_called_once()
+    assert isclose(m.call_args.args[0], 300, rel_tol=0.3, abs_tol=0.1)
