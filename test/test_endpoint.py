@@ -454,3 +454,56 @@ def test_get_full_url(mocker: MockerFixture) -> None:
             params={"whom": "octocat"}
         ) == {"hello": "octocat"}
     m.assert_not_called()
+
+
+@responses.activate
+def test_slashed_path(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"hello": "world"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/greet/",
+        json={"hello": "world/"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/widgets/test%20widget",
+        json={"name": "Test widget", "color": "taupe", "id": 0},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert (client / "/greet").get() == {"hello": "world"}
+        assert (client / "/greet/").get() == {"hello": "world/"}
+        assert (client / "/widgets/test widget").get() == {
+            "name": "Test widget",
+            "color": "taupe",
+            "id": 0,
+        }
+    m.assert_not_called()

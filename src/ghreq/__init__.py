@@ -16,7 +16,6 @@ from random import random
 import time  # Module import for mocking purposes
 from types import TracebackType
 from typing import TYPE_CHECKING, Any
-from urllib.parse import quote
 import requests
 
 __version__ = "0.1.0.dev1"
@@ -96,7 +95,7 @@ class GitHub:
         self.session.close()
 
     def __truediv__(self, path: str) -> Endpoint:
-        return Endpoint(self, addurlpath(self.api_url, path))
+        return Endpoint(self, joinurl(self.api_url, path))
 
     def request(
         self,
@@ -110,11 +109,8 @@ class GitHub:
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
-        if path.lower().startswith(("http://", "https://")):
-            url = path
-        else:
-            url = self.api_url.rstrip("/") + "/" + path.lstrip("/")
         method = method.upper()
+        url = joinurl(self.api_url, path)
         log.debug("%s %s", method, url)
         if method in MUTATING_METHODS and self.last_mutation is not None:
             mutdelay = (
@@ -312,7 +308,7 @@ class Endpoint:
     url: str
 
     def __truediv__(self, path: str) -> Endpoint:
-        return type(self)(self.client, addurlpath(self.url, path))
+        return type(self)(self.client, joinurl(self.url, path))
 
     def request(
         self,
@@ -552,8 +548,8 @@ def nowdt() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def addurlpath(base: str, path: str) -> str:
+def joinurl(base: str, path: str) -> str:
     if path.lower().startswith(("http://", "https://")):
         return path
     else:
-        return base.rstrip("/") + "/" + quote(path, safe="")
+        return base.rstrip("/") + "/" + path.lstrip("/")
