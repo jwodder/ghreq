@@ -13,7 +13,7 @@ import logging
 import os
 import platform
 from random import random
-from time import sleep, time
+import time  # Module import for mocking purposes
 from types import TracebackType
 from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
@@ -117,7 +117,7 @@ class GitHub:
                 mutdelay -= (nowdt() - self.last_mutation).total_seconds()
             if mutdelay > 0:
                 log.debug("Sleeping for %f seconds between mutating requests", mutdelay)
-                sleep(mutdelay)
+                time.sleep(mutdelay)
         req = self.session.prepare_request(
             requests.Request(
                 method,
@@ -161,7 +161,7 @@ class GitHub:
                                 str(e),
                                 delay,
                             )
-                        sleep(delay)
+                        time.sleep(delay)
                     else:
                         raise
         except requests.HTTPError as e:
@@ -489,7 +489,7 @@ class Retrier:
                     except (LookupError, ValueError):
                         delay = 0
                     else:
-                        delay = time() - reset + 1
+                        delay = time.time() - reset + 1
                 else:
                     log.debug("Secondary rate limit triggered")
                     delay = backoff
@@ -512,12 +512,12 @@ class PrettyHTTPError(Exception):
 
     def __str__(self) -> str:
         if 400 <= self.response.status_code < 500:
-            msg = "{0.status_code} Client Error: {0.reason} for URL: {0.url}\n"
+            msg = "{0.status_code} Client Error: {0.reason} for URL: {0.url}"
         elif 500 <= self.response.status_code < 600:
-            msg = "{0.status_code} Server Error: {0.reason} for URL: {0.url}\n"
+            msg = "{0.status_code} Server Error: {0.reason} for URL: {0.url}"
         else:
-            msg = "{0.status_code} Unknown Error: {0.reason} for URL: {0.url}\n"
-        msg = msg.format(self.response)
+            msg = "{0.status_code} Unknown Error: {0.reason} for URL: {0.url}"
+        msg = msg.format(self.response) + "\n\n"
         try:
             resp = self.response.json()
         except ValueError:

@@ -1,6 +1,8 @@
 from __future__ import annotations
+import pytest
+from pytest_mock import MockerFixture
 import responses
-from ghreq import GitHub
+from ghreq import GitHub, PrettyHTTPError
 
 
 @responses.activate
@@ -119,3 +121,65 @@ def test_header_args() -> None:
         assert client.get(
             "/greet", headers={"Authorization": "token hunter3", "user-agent": "Python"}
         ) == {"hello": "hunter3"}
+
+
+@responses.activate
+def test_status_error_json(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/coffee",
+        json={"message": "Unfortunately, I am a teapot.", "error": "TeapotError"},
+        status=418,
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        with pytest.raises(PrettyHTTPError) as exc:
+            client.get("coffee")
+        assert str(exc.value) == (
+            "418 Client Error: I'm a Teapot for URL:"
+            " https://github.example.com/api/coffee\n"
+            "\n"
+            "{\n"
+            '    "message": "Unfortunately, I am a teapot.",\n'
+            '    "error": "TeapotError"\n'
+            "}"
+        )
+    m.assert_not_called()
+
+
+@responses.activate
+def test_status_error_not_json(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/coffee.html",
+        body="<p><i>Someone</i> drank all the <b>coffee</b>.</p>\n",
+        content_type="text/html",
+        status=404,
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "text/html",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        with pytest.raises(PrettyHTTPError) as exc:
+            client.get("coffee.html", headers={"Accept": "text/html"})
+        assert str(exc.value) == (
+            "404 Client Error: Not Found for URL:"
+            " https://github.example.com/api/coffee.html\n"
+            "\n"
+            "<p><i>Someone</i> drank all the <b>coffee</b>.</p>\n"
+        )
+    m.assert_not_called()
