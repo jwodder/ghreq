@@ -6,7 +6,7 @@ Visit <https://github.com/jwodder/ghreq> for more information.
 
 from __future__ import annotations
 from collections.abc import Container, Iterable, Iterator, Mapping
-from dataclasses import InitVar, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 import json
 import logging
@@ -46,48 +46,35 @@ if TYPE_CHECKING:
     HeadersType: TypeAlias = Mapping[str, str | bytes | None] | None
 
 
-@dataclass
-class RetryConfig:
-    retries: int = 5
-    backoff_factor: float = 1.0
-    backoff_base: float = 1.25  # urllib3 uses 2
-    backoff_jitter: float = 0.0
-    backoff_max: float = 120.0
-    total_wait: float = 600.0  ### TODO: Rethink this default
-    ### TODO: Am I sure 501 errors should be retried?
-    retry_statuses: Container[int] = range(500, 600)
-
-    def backoff(self, attempts: int) -> float:
-        if attempts < 2:
-            # urllib3 says "most errors are resolved immediately by a second
-            # try without a delay" and thus doesn't sleep on the first retry,
-            # but that seems irresponsible
-            return 0.1
-        b = self.backoff_factor * self.backoff_base ** (attempts - 1)
-        if self.backoff_jitter > 0:
-            b *= random() * self.backoff_jitter
-        return max(0, min(b, self.backoff_max))
-
-
-@dataclass
 class GitHub:
-    token: InitVar[str]
-    api_url: str = DEFAULT_API_URL
-    user_agent: InitVar[str | None] = None
-    # GitHub recommends waiting 1 second between non-GET requests in order to
-    # avoid hitting secondary rate limits.
-    mutation_delay: float = 1.0
-    retry_config: RetryConfig = field(default_factory=RetryConfig)
-    session: requests.Session = field(init=False)
-    last_mutation: datetime | None = field(init=False, default=None)
-
-    def __post_init__(self, token: str, user_agent: str | None) -> None:
-        self.session = requests.Session()
-        self.session.headers["Accept"] = "application/vnd.github+json"
-        self.session.headers["Authorization"] = f"Bearer {token}"
-        if user_agent is not None:
-            self.session.headers["User-Agent"] = user_agent
-        self.session.headers["X-GitHub-Api-Version"] = "2022-11-28"
+    def __init__(
+        self,
+        *,
+        token: str | None,
+        api_url: str = DEFAULT_API_URL,
+        session: requests.Session | None = None,
+        user_agent: str | None = None,
+        mutation_delay: float = 1.0,
+        retry_config: RetryConfig | None = None,
+    ) -> None:
+        self.api_url = api_url
+        if session is None:
+            session = requests.Session()
+            session.headers["Accept"] = "application/vnd.github+json"
+            if token is not None:
+                session.headers["Authorization"] = f"Bearer {token}"
+            if user_agent is not None:
+                session.headers["User-Agent"] = user_agent
+            session.headers["X-GitHub-Api-Version"] = "2022-11-28"
+        # No headers are set on pre-supplied sessions
+        self.session = session
+        # GitHub recommends waiting 1 second between non-GET requests in order
+        # to avoid hitting secondary rate limits.
+        self.mutation_delay = mutation_delay
+        if retry_config is None:
+            retry_config = RetryConfig()
+        self.retry_config = retry_config
+        self.last_mutation: datetime | None = None
 
     def __enter__(self) -> GitHub:
         return self
@@ -248,6 +235,29 @@ class GitHub:
                 yield from itemses[0]
             path = r.links.get("next", {}).get("url")
             params = None
+
+
+@dataclass
+class RetryConfig:
+    retries: int = 5
+    backoff_factor: float = 1.0
+    backoff_base: float = 1.25  # urllib3 uses 2
+    backoff_jitter: float = 0.0
+    backoff_max: float = 120.0
+    total_wait: float = 600.0  ### TODO: Rethink this default
+    ### TODO: Am I sure 501 errors should be retried?
+    retry_statuses: Container[int] = range(500, 600)
+
+    def backoff(self, attempts: int) -> float:
+        if attempts < 2:
+            # urllib3 says "most errors are resolved immediately by a second
+            # try without a delay" and thus doesn't sleep on the first retry,
+            # but that seems irresponsible
+            return 0.1
+        b = self.backoff_factor * self.backoff_base ** (attempts - 1)
+        if self.backoff_jitter > 0:
+            b *= random() * self.backoff_jitter
+        return max(0, min(b, self.backoff_max))
 
 
 @dataclass
