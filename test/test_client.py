@@ -1,7 +1,7 @@
 from __future__ import annotations
 from math import isclose
 import sys
-from time import sleep
+from time import sleep, time
 import pytest
 from pytest_mock import MockerFixture
 import requests
@@ -847,4 +847,115 @@ def test_no_retry_request_value_error(mocker: MockerFixture) -> None:
     with GitHub(api_url="scheme://github.lisp") as client:
         with pytest.raises(requests.exceptions.InvalidSchema):
             client.get("/flakey")
+    m.assert_not_called()
+
+
+@responses.activate
+def test_retry_primary_rate_limit(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"message": "API rate limit exceeded"},
+        status=403,
+        headers={
+            "x-ratelimit-remaining": "0",
+            "x-ratelimit-reset": str(int(time() + 10)),
+        },
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"hello": "world"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.get("/greet") == {"hello": "world"}
+    m.assert_called_once()
+    assert isclose(m.call_args.args[0], 10, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_retry_403_rate_limit_no_headers(mocker: MockerFixture) -> None:
+    for _ in range(4):
+        responses.get(
+            "https://github.example.com/api/greet",
+            json={"message": "You have exceeded a secondary rate limit.  Good luck."},
+            status=403,
+            match=(
+                responses.matchers.query_param_matcher({}),
+                responses.matchers.header_matcher(
+                    {
+                        "Accept": "application/vnd.github+json",
+                        "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                    }
+                ),
+            ),
+        )
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"hello": "world"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.get("/greet") == {"hello": "world"}
+    assert m.call_count == 4
+    expected = [0.1, 1.25, 1.25**2, 1.25**3]
+    delays = [ca.args[0] for ca in m.call_args_list]
+    for exp, actual in zip(expected, delays):
+        assert isclose(actual, exp, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_no_retry_normal_403(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"message": "You're not allowed in."},
+        status=403,
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        with pytest.raises(PrettyHTTPError) as exc:
+            client.get("greet")
+        assert str(exc.value) == (
+            "403 Client Error: Forbidden for URL:"
+            " https://github.example.com/api/greet\n"
+            "\n"
+            "{\n"
+            '    "message": "You\'re not allowed in."\n'
+            "}"
+        )
     m.assert_not_called()

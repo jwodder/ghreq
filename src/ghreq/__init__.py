@@ -486,14 +486,14 @@ class Retrier:
                 except (LookupError, ValueError):
                     delay = 0
             elif "rate limit" in response.text:
-                if response.headers["x-ratelimit-remaining"] == "0":
+                if response.headers.get("x-ratelimit-remaining") == "0":
                     try:
-                        reset = int(response.headers["x-ratelimit-remaining"])
+                        reset = int(response.headers["x-ratelimit-reset"])
                         log.debug("Primary rate limit exceeded; waiting for reset")
                     except (LookupError, ValueError):
                         delay = 0
                     else:
-                        delay = time.time() - reset + 1
+                        delay = reset - time.time() + 1
                 else:
                     log.debug("Secondary rate limit triggered")
                     delay = backoff
