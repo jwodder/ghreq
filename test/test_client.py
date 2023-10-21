@@ -896,6 +896,42 @@ def test_403_retry_after(mocker: MockerFixture) -> None:
 
 
 @responses.activate
+def test_403_bad_retry_after(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/greet",
+        status=403,
+        headers={"Retry-After": "an hour"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"hello": "world"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.get("/greet") == {"hello": "world"}
+    m.assert_called_once()
+    assert isclose(m.call_args.args[0], 0.1, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
 def test_retry_primary_rate_limit(mocker: MockerFixture) -> None:
     responses.get(
         "https://github.example.com/api/greet",
@@ -933,6 +969,83 @@ def test_retry_primary_rate_limit(mocker: MockerFixture) -> None:
         assert client.get("/greet") == {"hello": "world"}
     m.assert_called_once()
     assert isclose(m.call_args.args[0], 10, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_retry_primary_rate_limit_bad_reset(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"message": "API rate limit exceeded"},
+        status=403,
+        headers={
+            "x-ratelimit-remaining": "0",
+            "x-ratelimit-reset": "an hour",
+        },
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"hello": "world"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.get("/greet") == {"hello": "world"}
+    m.assert_called_once()
+    assert isclose(m.call_args.args[0], 0.1, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_retry_primary_rate_limit_missing_reset(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"message": "API rate limit exceeded"},
+        status=403,
+        headers={"x-ratelimit-remaining": "0"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"hello": "world"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.get("/greet") == {"hello": "world"}
+    m.assert_called_once()
+    assert isclose(m.call_args.args[0], 0.1, rel_tol=0.3, abs_tol=0.1)
 
 
 @responses.activate
@@ -1004,6 +1117,43 @@ def test_no_retry_normal_403(mocker: MockerFixture) -> None:
             "}"
         )
     m.assert_not_called()
+
+
+@responses.activate
+def test_retry_normal_403_in_retry_statuses(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/enter",
+        json={"message": "You're not allowed in."},
+        status=403,
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/enter",
+        json={"message": "Oh, wait, my mistake."},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    cfg = RetryConfig(retry_statuses=[403])
+    with GitHub(api_url="https://github.example.com/api", retry_config=cfg) as client:
+        assert client.get("enter") == {"message": "Oh, wait, my mistake."}
+    m.assert_called_once()
+    assert isclose(m.call_args.args[0], 0.1, rel_tol=0.3, abs_tol=0.1)
 
 
 @responses.activate

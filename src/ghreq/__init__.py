@@ -169,7 +169,7 @@ class GitHub:
             if e.response is not None:
                 raise PrettyHTTPError(response=e.response, request=e.request)
             else:
-                raise
+                raise  # pragma: no cover
         if stream or raw:
             return r
         elif r.status_code == 204 or r.text.strip() == "":
@@ -483,7 +483,7 @@ class Retrier:
                 try:
                     delay = int(response.headers["Retry-After"]) + 1
                     log.debug("Server responded with 403 and Retry-After header")
-                except (LookupError, ValueError):
+                except ValueError:
                     delay = 0
             elif "rate limit" in response.text:
                 if response.headers.get("x-ratelimit-remaining") == "0":
@@ -520,7 +520,9 @@ class PrettyHTTPError(requests.HTTPError):
         elif 500 <= self.response.status_code < 600:
             msg = "{0.status_code} Server Error: {0.reason} for URL: {0.url}"
         else:
-            msg = "{0.status_code} Unknown Error: {0.reason} for URL: {0.url}"
+            msg = (  # pragma: no cover
+                "{0.status_code} Unknown Error: {0.reason} for URL: {0.url}"
+            )
         msg = msg.format(self.response)
         if self.response.text.strip():
             try:
