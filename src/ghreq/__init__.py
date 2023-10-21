@@ -24,6 +24,14 @@ __author_email__ = "ghreq@varonathe.org"
 __license__ = "MIT"
 __url__ = "https://github.com/jwodder/ghreq"
 
+__all__ = [
+    "GitHub",
+    "PrettyHTTPError",
+    "RetryConfig",
+    "get_github_api_url",
+    "make_user_agent",
+]
+
 log = logging.getLogger(__name__)
 
 DEFAULT_API_URL = "https://api.github.com"
