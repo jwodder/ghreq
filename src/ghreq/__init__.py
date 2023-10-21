@@ -15,7 +15,7 @@ import platform
 from random import random
 import time  # Module import for mocking purposes
 from types import TracebackType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, overload
 import requests
 
 __version__ = "0.1.0.dev1"
@@ -278,26 +278,52 @@ class GitHub:
             raw=raw,
         )
 
+    @overload
     def paginate(
         self,
         path: str,
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        raw: Literal[False] = False,
     ) -> Iterator[dict]:
+        ...
+
+    @overload
+    def paginate(
+        self,
+        path: str,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        raw: Literal[True],
+    ) -> Iterator[requests.Response]:
+        ...
+
+    def paginate(
+        self,
+        path: str,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        raw: Literal[True, False] = False,
+    ) -> Iterator:
         while path is not None:
             r = self.get(path, params=params, headers=headers, raw=True)
-            data = r.json()
-            if isinstance(data, list):
-                yield from data
+            if raw:
+                yield r
             else:
-                assert isinstance(data, dict)
-                itemses = [v for k, v in data.items() if k != "total_count"]
-                if len(itemses) != 1:
-                    raise ValueError(
-                        f"Unique non-count key not found in {path} response"
-                    )
-                yield from itemses[0]
+                data = r.json()
+                if isinstance(data, list):
+                    yield from data
+                else:
+                    assert isinstance(data, dict)
+                    itemses = [v for v in data.values() if isinstance(v, list)]
+                    if len(itemses) != 1:
+                        raise ValueError(
+                            f"Unique list field not found in {path} response"
+                        )
+                    yield from itemses[0]
             path = r.links.get("next", {}).get("url")
             params = None
 
@@ -424,10 +450,34 @@ class Endpoint:
             raw=raw,
         )
 
+    @overload
     def paginate(
-        self, *, params: ParamsType = None, headers: HeadersType = None
+        self,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        raw: Literal[False] = False,
     ) -> Iterator[dict]:
-        return self.client.paginate(self.url, params=params, headers=headers)
+        ...
+
+    @overload
+    def paginate(
+        self,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        raw: Literal[True],
+    ) -> Iterator[requests.Response]:
+        ...
+
+    def paginate(
+        self,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        raw: Literal[True, False] = False,
+    ) -> Iterator:
+        return self.client.paginate(self.url, params=params, headers=headers, raw=raw)
 
 
 @dataclass

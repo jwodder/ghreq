@@ -355,6 +355,7 @@ def test_paginate_dict(mocker: MockerFixture) -> None:
         "https://github.example.com/api/search/widgets",
         json={
             "total_count": 8,
+            "incomplete_results": False,
             "results": [
                 {"name": "Widgey", "color": "blue", "id": 1},
                 {"name": "Pidgey", "color": "tawny", "id": 2},
@@ -382,6 +383,7 @@ def test_paginate_dict(mocker: MockerFixture) -> None:
         "https://github.example.com/api/search/widgets",
         json={
             "total_count": 8,
+            "incomplete_results": False,
             "results": [
                 {"name": "Spigot", "color": "puce", "id": 8},
                 {"name": "Nut", "color": "green", "id": 11},
@@ -414,6 +416,88 @@ def test_paginate_dict(mocker: MockerFixture) -> None:
             {"name": "Nut", "color": "green", "id": 11},
             {"name": "Bolt", "color": "grey", "id": 12},
         ]
+    m.assert_not_called()
+
+
+@responses.activate
+def test_paginate_raw(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/search/widgets",
+        json={
+            "total_count": 8,
+            "incomplete_results": False,
+            "results": [
+                {"name": "Widgey", "color": "blue", "id": 1},
+                {"name": "Pidgey", "color": "tawny", "id": 2},
+                {"name": "Fidgety", "color": "purple", "id": 3},
+                {"name": "Refridgey", "color": "green", "id": 4},
+                {"name": "Sprocket", "color": "yellow", "id": 6},
+            ],
+        },
+        headers={
+            "Link": '<https://github.example.com/api/search/widgets?q=is:widgety&page=2>; rel="next"'  # noqa: B950
+        },
+        match=(
+            responses.matchers.query_param_matcher(
+                {"superfluous": "yes", "q": "is:widgety"}
+            ),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/search/widgets",
+        json={
+            "total_count": 8,
+            "incomplete_results": False,
+            "results": [
+                {"name": "Spigot", "color": "puce", "id": 8},
+                {"name": "Nut", "color": "green", "id": 11},
+                {"name": "Bolt", "color": "grey", "id": 12},
+            ],
+        },
+        match=(
+            responses.matchers.query_param_matcher({"q": "is:widgety", "page": "2"}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        pages = list(
+            (client / "search/widgets").paginate(
+                params={"superfluous": "yes", "q": "is:widgety"}, raw=True
+            )
+        )
+        assert len(pages) == 2
+        assert pages[0].json() == {
+            "total_count": 8,
+            "incomplete_results": False,
+            "results": [
+                {"name": "Widgey", "color": "blue", "id": 1},
+                {"name": "Pidgey", "color": "tawny", "id": 2},
+                {"name": "Fidgety", "color": "purple", "id": 3},
+                {"name": "Refridgey", "color": "green", "id": 4},
+                {"name": "Sprocket", "color": "yellow", "id": 6},
+            ],
+        }
+        assert pages[1].json() == {
+            "total_count": 8,
+            "incomplete_results": False,
+            "results": [
+                {"name": "Spigot", "color": "puce", "id": 8},
+                {"name": "Nut", "color": "green", "id": 11},
+                {"name": "Bolt", "color": "grey", "id": 12},
+            ],
+        }
     m.assert_not_called()
 
 
