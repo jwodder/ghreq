@@ -167,7 +167,7 @@ class GitHub:
                         raise
         except requests.HTTPError as e:
             if e.response is not None:
-                raise PrettyHTTPError(e.response)
+                raise PrettyHTTPError(response=e.response, request=e.request)
             else:
                 raise
         if stream or raw:
@@ -507,11 +507,9 @@ class Retrier:
         return max(min(time_left, delay), 0)
 
 
-@dataclass
-class PrettyHTTPError(Exception):
-    response: requests.Response
-
+class PrettyHTTPError(requests.HTTPError):
     def __str__(self) -> str:
+        assert self.response is not None
         if 400 <= self.response.status_code < 500:
             msg = "{0.status_code} Client Error: {0.reason} for URL: {0.url}"
         elif 500 <= self.response.status_code < 600:
