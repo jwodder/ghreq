@@ -20,6 +20,7 @@
 `GitHub <https://github.com/jwodder/ghreq>`_
 | `PyPI <https://pypi.org/project/ghreq/>`_
 | `Issues <https://github.com/jwodder/ghreq/issues>`_
+| `Changelog <https://github.com/jwodder/ghreq/blob/master/CHANGELOG.md>`_
 
 ``ghreq`` is a simple wrapper around requests_ with various customizations
 aimed at working with the GitHub REST API.  Notable features include:

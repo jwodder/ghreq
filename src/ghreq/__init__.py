@@ -49,7 +49,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Any, Literal, overload
 import requests
 
-__version__ = "0.1.0"
+__version__ = "0.1.1.dev1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "ghreq@varonathe.org"
 __license__ = "MIT"
@@ -81,7 +81,7 @@ MUTATING_METHODS = frozenset(["POST", "PATCH", "PUT", "DELETE"])
 
 if TYPE_CHECKING:
     from typing import IO, List, Tuple, Union
-    from typing_extensions import TypeAlias
+    from typing_extensions import Self, TypeAlias
 
     ParamsValue: TypeAlias = Union[
         str, bytes, int, float, Iterable[Union[str, bytes, int, float]], None
@@ -184,7 +184,7 @@ class Client:
         self.retry_config = retry_config
         self.last_mutation: datetime | None = None
 
-    def __enter__(self) -> Client:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
