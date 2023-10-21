@@ -6,7 +6,7 @@ import pytest
 from pytest_mock import MockerFixture
 import requests
 import responses
-from ghreq import DEFAULT_API_VERSION, GitHub, PrettyHTTPError
+from ghreq import DEFAULT_API_VERSION, GitHub, PrettyHTTPError, RetryConfig
 
 PNG = bytes.fromhex(
     "89 50 4e 47 0d 0a 1a 0a  00 00 00 0d 49 48 44 52"
@@ -799,3 +799,52 @@ def test_retries_exhausted(mocker: MockerFixture) -> None:
     delays = [ca.args[0] for ca in m.call_args_list]
     for exp, actual in zip(expected, delays):
         assert isclose(actual, exp, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_retry_request_errors(mocker: MockerFixture) -> None:
+    for _ in range(4):
+        responses.get(
+            "https://github.example.com/api/flakey",
+            body=requests.RequestException("Internetting is hard"),
+            match=(
+                responses.matchers.query_param_matcher({}),
+                responses.matchers.header_matcher(
+                    {
+                        "Accept": "application/vnd.github+json",
+                        "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                    }
+                ),
+            ),
+        )
+    responses.get(
+        "https://github.example.com/api/flakey",
+        json={"worth_it": False},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    cfg = RetryConfig(backoff_factor=3, backoff_base=2)
+    with GitHub(api_url="https://github.example.com/api", retry_config=cfg) as client:
+        assert client.get("/flakey") == {"worth_it": False}
+    assert m.call_count == 4
+    expected = [0.3, 6, 12, 24]
+    delays = [ca.args[0] for ca in m.call_args_list]
+    for exp, actual in zip(expected, delays):
+        assert isclose(actual, exp, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_no_retry_request_value_error(mocker: MockerFixture) -> None:
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="scheme://github.lisp") as client:
+        with pytest.raises(requests.exceptions.InvalidSchema):
+            client.get("/flakey")
+    m.assert_not_called()
