@@ -16,6 +16,7 @@ from random import random
 from time import sleep, time
 from types import TracebackType
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 import requests
 
 __version__ = "0.1.0.dev1"
@@ -89,14 +90,17 @@ class GitHub:
     ) -> None:
         self.session.close()
 
+    def __truediv__(self, path: str) -> Endpoint:
+        return Endpoint(self, addurlpath(self.api_url, path))
+
     def request(
         self,
         method: str,
         path: str,
+        json: Any = None,
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        json: Any = None,
         data: bytes | None = None,
         raw: bool = False,
     ) -> Any:
@@ -260,6 +264,101 @@ class GitHub:
 
 
 @dataclass
+class Endpoint:
+    client: GitHub
+    url: str
+
+    def __truediv__(self, path: str) -> Endpoint:
+        return type(self)(self.client, addurlpath(self.url, path))
+
+    def request(
+        self,
+        method: str,
+        json: Any = None,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        data: bytes | None = None,
+        raw: bool = False,
+    ) -> Any:
+        return self.client.request(
+            method,
+            self.url,
+            json=json,
+            params=params,
+            headers=headers,
+            data=data,
+            raw=raw,
+        )
+
+    def get(
+        self,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        raw: bool = False,
+    ) -> Any:
+        return self.request("GET", params=params, headers=headers, raw=raw)
+
+    def post(
+        self,
+        json: Any = None,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        data: bytes | None = None,
+        raw: bool = False,
+    ) -> Any:
+        return self.request(
+            "POST", params=params, headers=headers, json=json, data=data, raw=raw
+        )
+
+    def put(
+        self,
+        json: Any = None,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        data: bytes | None = None,
+        raw: bool = False,
+    ) -> Any:
+        return self.request(
+            "PUT", params=params, headers=headers, json=json, data=data, raw=raw
+        )
+
+    def patch(
+        self,
+        json: Any = None,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        data: bytes | None = None,
+        raw: bool = False,
+    ) -> Any:
+        return self.request(
+            "PATCH", params=params, headers=headers, json=json, data=data, raw=raw
+        )
+
+    def delete(
+        self,
+        json: Any = None,
+        *,
+        params: ParamsType = None,
+        headers: HeadersType = None,
+        data: bytes | None = None,
+        raw: bool = False,
+    ) -> Any:
+        return self.request(
+            "DELETE", params=params, headers=headers, json=json, data=data, raw=raw
+        )
+
+    def paginate(
+        self, *, params: ParamsType = None, headers: HeadersType = None
+    ) -> Iterator[dict]:
+        return self.client.paginate(self.url, params=params, headers=headers)
+
+
+@dataclass
 class RetryConfig:
     retries: int = 5
     backoff_factor: float = 1.0
@@ -375,3 +474,10 @@ def get_github_api_url() -> str:
 
 def nowdt() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def addurlpath(base: str, path: str) -> str:
+    if path.lower().startswith(("http://", "https://")):
+        return path
+    else:
+        return base.rstrip("/") + "/" + quote(path, safe="")
