@@ -1,5 +1,6 @@
 from __future__ import annotations
 from math import isclose
+import sys
 import pytest
 from pytest_mock import MockerFixture
 import requests
@@ -161,8 +162,14 @@ def test_status_error_json(mocker: MockerFixture) -> None:
     with GitHub(api_url="https://github.example.com/api") as client:
         with pytest.raises(PrettyHTTPError) as exc:
             client.get("coffee")
+        # responses fills in HTTP reasons from the http.client module, which
+        # only gained status 418 in Python 3.9.
+        if sys.version_info < (3, 9):
+            reason = "None"
+        else:
+            reason = "I'm a Teapot"
         assert str(exc.value) == (
-            "418 Client Error: I'm a Teapot for URL:"
+            f"418 Client Error: {reason} for URL:"
             " https://github.example.com/api/coffee\n"
             "\n"
             "{\n"
