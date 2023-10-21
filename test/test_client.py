@@ -252,3 +252,61 @@ def test_post(mocker: MockerFixture) -> None:
         ) == {"good_photo": True}
     m.assert_called_once()
     assert isclose(m.call_args.args[0], 1.0, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_put(mocker: MockerFixture) -> None:
+    responses.put(
+        "https://github.example.com/api/widgets/1/flavors",
+        json={
+            "name": "Widgey",
+            "color": "blue",
+            "id": 1,
+            "flavors": ["spicy", "sweet"],
+        },
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                }
+            ),
+            responses.matchers.json_params_matcher(["spicy", "sweet"]),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.put("/widgets/1/flavors", ["spicy", "sweet"]) == {
+            "name": "Widgey",
+            "color": "blue",
+            "id": 1,
+            "flavors": ["spicy", "sweet"],
+        }
+    m.assert_not_called()
+
+
+@responses.activate
+def test_patch(mocker: MockerFixture) -> None:
+    responses.patch(
+        "https://github.example.com/api/widgets/1",
+        json={"name": "Widgey", "color": "red", "id": 1},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                }
+            ),
+            responses.matchers.json_params_matcher({"color": "red"}),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.patch("/widgets/1", {"color": "red"}) == {
+            "name": "Widgey",
+            "color": "red",
+            "id": 1,
+        }
+    m.assert_not_called()
