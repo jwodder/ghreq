@@ -2,7 +2,7 @@ from __future__ import annotations
 from datetime import timedelta
 from math import isclose
 import sys
-from time import sleep, time
+from time import time
 import pytest
 from pytest_mock import MockerFixture
 import requests
@@ -691,7 +691,15 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
             ),
         ),
     )
-    m = mocker.patch("time.sleep")
+
+    now = nowdt()
+
+    def advance_clock(duration: float) -> None:
+        nonlocal now
+        now += timedelta(seconds=duration)
+
+    m = mocker.patch("time.sleep", side_effect=advance_clock)
+    mocker.patch("ghreq.nowdt", side_effect=lambda: now)
     with GitHub(api_url="https://github.example.com/api") as client:
         assert client.post("/widgets", {"name": "Widgey", "color": "blue"}) == {
             "name": "Widgey",
@@ -709,7 +717,7 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
         m.reset_mock()
         assert client.get("/widgets") == [{"name": "Widgey", "color": "blue", "id": 1}]
         m.assert_not_called()
-        sleep(0.5)
+        advance_clock(0.5)
         assert client.put("/widgets/1/flavors", ["spicy", "sweet"]) == {
             "name": "Widgey",
             "color": "red",
@@ -719,7 +727,7 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
         m.assert_called_once()
         assert isclose(m.call_args.args[0], 0.5, rel_tol=0.3, abs_tol=0.1)
         m.reset_mock()
-        sleep(2)
+        advance_clock(2)
         assert client.put("/widgets/1/flavors", ["sour", "bitter"]) == {
             "name": "Widgey",
             "color": "red",
