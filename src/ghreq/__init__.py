@@ -36,6 +36,8 @@ log = logging.getLogger(__name__)
 
 DEFAULT_API_URL = "https://api.github.com"
 
+MUTATING_METHODS = frozenset(["POST", "PATCH", "PUT", "DELETE"])
+
 if TYPE_CHECKING:
     from typing_extensions import TypeAlias
 
@@ -104,7 +106,7 @@ class GitHub:
             url = self.api_url.rstrip("/") + "/" + path.lstrip("/")
         method = method.upper()
         log.debug("%s %s", method, url)
-        if method != "GET":
+        if method in MUTATING_METHODS:
             mutdelay = self.mutation_delay
             if self.last_mutation is not None:
                 mutdelay -= (nowdt() - self.last_mutation).total_seconds()
@@ -120,7 +122,7 @@ class GitHub:
         try:
             while True:
                 try:
-                    if method != "GET":
+                    if method in MUTATING_METHODS:
                         self.last_mutation = nowdt()
                     r = self.session.send(req)
                     r.raise_for_status()
