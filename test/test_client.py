@@ -851,6 +851,42 @@ def test_no_retry_request_value_error(mocker: MockerFixture) -> None:
 
 
 @responses.activate
+def test_403_retry_after(mocker: MockerFixture) -> None:
+    responses.get(
+        "https://github.example.com/api/greet",
+        status=403,
+        headers={"Retry-After": "7"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    responses.get(
+        "https://github.example.com/api/greet",
+        json={"hello": "world"},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.get("/greet") == {"hello": "world"}
+    m.assert_called_once()
+    assert isclose(m.call_args.args[0], 7, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
 def test_retry_primary_rate_limit(mocker: MockerFixture) -> None:
     responses.get(
         "https://github.example.com/api/greet",
