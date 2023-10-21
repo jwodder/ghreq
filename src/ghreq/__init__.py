@@ -176,10 +176,10 @@ class GitHub:
     def post(
         self,
         path: str,
+        json: Any = None,
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        json: Any = None,
         data: bytes | None = None,
         raw: bool = False,
     ) -> Any:
@@ -190,10 +190,10 @@ class GitHub:
     def put(
         self,
         path: str,
+        json: Any = None,
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        json: Any = None,
         data: bytes | None = None,
         raw: bool = False,
     ) -> Any:
@@ -204,10 +204,10 @@ class GitHub:
     def patch(
         self,
         path: str,
+        json: Any = None,
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        json: Any = None,
         data: bytes | None = None,
         raw: bool = False,
     ) -> Any:
@@ -218,10 +218,10 @@ class GitHub:
     def delete(
         self,
         path: str,
+        json: Any = None,
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
-        json: Any = None,
         data: bytes | None = None,
         raw: bool = False,
     ) -> Any:
