@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 DEFAULT_API_URL = "https://api.github.com"
 
 if TYPE_CHECKING:
-    from typing_extension import TypeAlias
+    from typing_extensions import TypeAlias
 
     ParamsValue: TypeAlias = (
         str | bytes | int | float | Iterable[str | bytes | int | float] | None
@@ -73,7 +73,7 @@ class RetryConfig:
 class GitHub:
     token: InitVar[str]
     api_url: str = DEFAULT_API_URL
-    user_agent: InitVar[str | None]
+    user_agent: InitVar[str | None] = None
     # GitHub recommends waiting 1 second between non-GET requests in order to
     # avoid hitting secondary rate limits.
     mutation_delay: float = 1.0
@@ -118,12 +118,12 @@ class GitHub:
         method = method.upper()
         log.debug("%s %s", method, url)
         if method != "GET":
-            delay = self.mutation_delay
+            mutdelay = self.mutation_delay
             if self.last_mutation is not None:
-                delay -= (nowdt() - self.last_mutation).total_seconds()
-            if delay > 0:
-                log.debug("Sleeping for %f seconds between mutating requests", delay)
-                sleep(self.mutation_delay)
+                mutdelay -= (nowdt() - self.last_mutation).total_seconds()
+            if mutdelay > 0:
+                log.debug("Sleeping for %f seconds between mutating requests", mutdelay)
+                sleep(mutdelay)
         req = self.session.prepare_request(
             requests.Request(
                 method, url, params=params, headers=headers, json=json, data=data
@@ -137,6 +137,7 @@ class GitHub:
                         self.last_mutation = nowdt()
                     r = self.session.send(req)
                     r.raise_for_status()
+                    break
                 except ValueError:
                     # The errors that requests raises when the user supplies
                     # bad parameters all inherit ValueError
