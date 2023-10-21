@@ -111,10 +111,10 @@ class GitHub:
             url = self.api_url.rstrip("/") + "/" + path.lstrip("/")
         method = method.upper()
         log.debug("%s %s", method, url)
-        if method in MUTATING_METHODS:
-            mutdelay = self.mutation_delay
-            if self.last_mutation is not None:
-                mutdelay -= (nowdt() - self.last_mutation).total_seconds()
+        if method in MUTATING_METHODS and self.last_mutation is not None:
+            mutdelay = (
+                self.mutation_delay - (nowdt() - self.last_mutation).total_seconds()
+            )
             if mutdelay > 0:
                 log.debug("Sleeping for %f seconds between mutating requests", mutdelay)
                 time.sleep(mutdelay)
