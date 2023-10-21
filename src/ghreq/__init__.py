@@ -34,6 +34,8 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
+DEFAULT_ACCEPT = "application/vnd.github+json"
+
 DEFAULT_API_URL = "https://api.github.com"
 
 DEFAULT_API_VERSION = "2022-11-28"
@@ -66,7 +68,7 @@ class GitHub:
         self.api_url = api_url
         if session is None:
             session = requests.Session()
-            session.headers["Accept"] = "application/vnd.github+json"
+            session.headers["Accept"] = DEFAULT_ACCEPT
             if token is not None:
                 session.headers["Authorization"] = f"Bearer {token}"
             if user_agent is not None:

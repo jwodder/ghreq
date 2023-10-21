@@ -7,7 +7,14 @@ import pytest
 from pytest_mock import MockerFixture
 import requests
 import responses
-from ghreq import DEFAULT_API_VERSION, GitHub, PrettyHTTPError, RetryConfig, nowdt
+from ghreq import (
+    DEFAULT_ACCEPT,
+    DEFAULT_API_VERSION,
+    GitHub,
+    PrettyHTTPError,
+    RetryConfig,
+    nowdt,
+)
 
 PNG = bytes.fromhex(
     "89 50 4e 47 0d 0a 1a 0a  00 00 00 0d 49 48 44 52"
@@ -35,7 +42,7 @@ def test_get(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -48,7 +55,7 @@ def test_get(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({"whom": "octocat"}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -75,7 +82,7 @@ def test_get(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({"times": "10"}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "Authorization": "token forgot-this",
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
@@ -112,7 +119,7 @@ def test_header_args() -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "Authorization": "Bearer hunter2",
                     "User-Agent": "Test/0.0.0",
                     "X-GitHub-Api-Version": "2525-01-01",
@@ -127,7 +134,7 @@ def test_header_args() -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "Authorization": "token hunter3",
                     "user-agent": "Python",
                     "x-github-api-version": "1970-01-01",
@@ -155,9 +162,7 @@ def test_header_args() -> None:
         json={"hello": "world"},
         match=(
             responses.matchers.query_param_matcher({}),
-            responses.matchers.header_matcher(
-                {"Accept": "application/vnd.github+json"}
-            ),
+            responses.matchers.header_matcher({"Accept": DEFAULT_ACCEPT}),
         ),
     )
     with GitHub(api_version=None) as client:
@@ -174,7 +179,7 @@ def test_status_error_json(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -247,7 +252,7 @@ def test_post(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -261,7 +266,7 @@ def test_post(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "Content-Type": "image/png",
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
@@ -297,7 +302,7 @@ def test_put(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -324,7 +329,7 @@ def test_patch(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -350,7 +355,7 @@ def test_delete(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -378,7 +383,7 @@ def test_paginate_list(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({"superfluous": "yes"}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -398,7 +403,7 @@ def test_paginate_list(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({"page": "2"}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -414,7 +419,7 @@ def test_paginate_list(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({"page": "3"}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -463,7 +468,7 @@ def test_paginate_dict(mocker: MockerFixture) -> None:
             ),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -484,7 +489,7 @@ def test_paginate_dict(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({"q": "is:widgety", "page": "2"}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -533,7 +538,7 @@ def test_paginate_raw(mocker: MockerFixture) -> None:
             ),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -554,7 +559,7 @@ def test_paginate_raw(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({"q": "is:widgety", "page": "2"}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -607,7 +612,7 @@ def test_paginate_no_links(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({"superfluous": "yes"}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -633,7 +638,7 @@ def test_get_full_url(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -646,7 +651,7 @@ def test_get_full_url(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({"whom": "octocat"}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -692,7 +697,7 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -706,7 +711,7 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -720,7 +725,7 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -738,7 +743,7 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -757,7 +762,7 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -771,7 +776,7 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -836,7 +841,7 @@ def test_retry_5xx(mocker: MockerFixture) -> None:
                 responses.matchers.query_param_matcher({}),
                 responses.matchers.header_matcher(
                     {
-                        "Accept": "application/vnd.github+json",
+                        "Accept": DEFAULT_ACCEPT,
                         "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                     }
                 ),
@@ -849,7 +854,7 @@ def test_retry_5xx(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -875,7 +880,7 @@ def test_retries_exhausted(mocker: MockerFixture) -> None:
                 responses.matchers.query_param_matcher({}),
                 responses.matchers.header_matcher(
                     {
-                        "Accept": "application/vnd.github+json",
+                        "Accept": DEFAULT_ACCEPT,
                         "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                     }
                 ),
@@ -906,7 +911,7 @@ def test_retry_request_errors(mocker: MockerFixture) -> None:
                 responses.matchers.query_param_matcher({}),
                 responses.matchers.header_matcher(
                     {
-                        "Accept": "application/vnd.github+json",
+                        "Accept": DEFAULT_ACCEPT,
                         "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                     }
                 ),
@@ -919,7 +924,7 @@ def test_retry_request_errors(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -955,7 +960,7 @@ def test_403_retry_after(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -968,7 +973,7 @@ def test_403_retry_after(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -991,7 +996,7 @@ def test_403_bad_retry_after(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1004,7 +1009,7 @@ def test_403_bad_retry_after(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1031,7 +1036,7 @@ def test_retry_primary_rate_limit(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1044,7 +1049,7 @@ def test_retry_primary_rate_limit(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1071,7 +1076,7 @@ def test_retry_primary_rate_limit_bad_reset(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1084,7 +1089,7 @@ def test_retry_primary_rate_limit_bad_reset(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1108,7 +1113,7 @@ def test_retry_primary_rate_limit_missing_reset(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1121,7 +1126,7 @@ def test_retry_primary_rate_limit_missing_reset(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1145,7 +1150,7 @@ def test_retry_403_rate_limit_no_headers(mocker: MockerFixture) -> None:
                 responses.matchers.query_param_matcher({}),
                 responses.matchers.header_matcher(
                     {
-                        "Accept": "application/vnd.github+json",
+                        "Accept": DEFAULT_ACCEPT,
                         "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                     }
                 ),
@@ -1158,7 +1163,7 @@ def test_retry_403_rate_limit_no_headers(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1184,7 +1189,7 @@ def test_no_retry_normal_403(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1215,7 +1220,7 @@ def test_retry_normal_403_in_retry_statuses(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1228,7 +1233,7 @@ def test_retry_normal_403_in_retry_statuses(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1252,7 +1257,7 @@ def test_retry_intermixed_5xx_and_rate_limit(mocker: MockerFixture) -> None:
                 responses.matchers.query_param_matcher({}),
                 responses.matchers.header_matcher(
                     {
-                        "Accept": "application/vnd.github+json",
+                        "Accept": DEFAULT_ACCEPT,
                         "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                     }
                 ),
@@ -1267,7 +1272,7 @@ def test_retry_intermixed_5xx_and_rate_limit(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1282,7 +1287,7 @@ def test_retry_intermixed_5xx_and_rate_limit(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1295,7 +1300,7 @@ def test_retry_intermixed_5xx_and_rate_limit(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1322,7 +1327,7 @@ def test_retry_total_wait_exceeded(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1337,7 +1342,7 @@ def test_retry_total_wait_exceeded(mocker: MockerFixture) -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": "application/vnd.github+json",
+                    "Accept": DEFAULT_ACCEPT,
                     "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                 }
             ),
@@ -1375,7 +1380,7 @@ def test_retry_no_total_wait(mocker: MockerFixture) -> None:
                 responses.matchers.query_param_matcher({}),
                 responses.matchers.header_matcher(
                     {
-                        "Accept": "application/vnd.github+json",
+                        "Accept": DEFAULT_ACCEPT,
                         "X-GitHub-Api-Version": DEFAULT_API_VERSION,
                     }
                 ),
