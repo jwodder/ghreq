@@ -432,12 +432,12 @@ class Endpoint:
 
 @dataclass
 class RetryConfig:
-    retries: int = 5
+    retries: int = 10
     backoff_factor: float = 1.0
     backoff_base: float = 1.25  # urllib3 uses 2
     backoff_jitter: float = 0.0
     backoff_max: float = 120.0
-    total_wait: float = 600.0  ### TODO: Rethink this default
+    total_wait: float | None = 300.0  ### TODO: Rethink this default
     ### TODO: Am I sure 501 errors should be retried?
     retry_statuses: Container[int] = range(500, 600)
 
@@ -446,7 +446,7 @@ class RetryConfig:
             # urllib3 says "most errors are resolved immediately by a second
             # try without a delay" and thus doesn't sleep on the first retry,
             # but that seems irresponsible
-            return 0.1
+            return self.backoff_factor * 0.1
         b = self.backoff_factor * self.backoff_base ** (attempts - 1)
         if self.backoff_jitter > 0:
             b *= random() * self.backoff_jitter
@@ -457,10 +457,13 @@ class RetryConfig:
 class Retrier:
     config: RetryConfig
     attempts: int = field(init=False, default=0)
-    stop_time: datetime = field(init=False)
+    stop_time: datetime | None = field(init=False)
 
     def __post_init__(self) -> None:
-        self.stop_time = nowdt() + timedelta(seconds=self.config.total_wait)
+        if self.config.total_wait is not None:
+            self.stop_time = nowdt() + timedelta(seconds=self.config.total_wait)
+        else:
+            self.stop_time = None
 
     def __call__(self, response: requests.Response | None) -> float | None:
         self.attempts += 1
@@ -468,7 +471,7 @@ class Retrier:
             log.debug("Retries exhausted")
             return None
         now = nowdt()
-        if now >= self.stop_time:
+        if self.stop_time is not None and now >= self.stop_time:
             log.debug("Maximum total retry wait time exceeded")
             return None
         backoff = self.config.backoff(self.attempts)
@@ -503,8 +506,10 @@ class Retrier:
             delay = backoff
         else:
             return None
-        time_left = (self.stop_time - now).total_seconds()
-        return max(min(time_left, delay), 0)
+        if self.stop_time is not None:
+            time_left = (self.stop_time - now).total_seconds()
+            delay = min(time_left, delay)
+        return max(delay, 0)
 
 
 class PrettyHTTPError(requests.HTTPError):
@@ -516,13 +521,14 @@ class PrettyHTTPError(requests.HTTPError):
             msg = "{0.status_code} Server Error: {0.reason} for URL: {0.url}"
         else:
             msg = "{0.status_code} Unknown Error: {0.reason} for URL: {0.url}"
-        msg = msg.format(self.response) + "\n\n"
-        try:
-            resp = self.response.json()
-        except ValueError:
-            msg += self.response.text
-        else:
-            msg += json.dumps(resp, indent=4)
+        msg = msg.format(self.response)
+        if self.response.text.strip():
+            try:
+                resp = self.response.json()
+            except ValueError:
+                msg += "\n\n" + self.response.text
+            else:
+                msg += "\n\n" + json.dumps(resp, indent=4)
         return msg
 
 

@@ -729,3 +729,73 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
         assert client.delete("/widgets/1") is None
         m.assert_called_once()
         assert isclose(m.call_args.args[0], 1.0, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_retry_5xx(mocker: MockerFixture) -> None:
+    for status in range(500, 506):
+        responses.get(
+            "https://github.example.com/api/flakey",
+            status=status,
+            match=(
+                responses.matchers.query_param_matcher({}),
+                responses.matchers.header_matcher(
+                    {
+                        "Accept": "application/vnd.github+json",
+                        "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                    }
+                ),
+            ),
+        )
+    responses.get(
+        "https://github.example.com/api/flakey",
+        json={"worth_it": False},
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        assert client.get("/flakey") == {"worth_it": False}
+    assert m.call_count == 6
+    expected = [0.1, 1.25, 1.25**2, 1.25**3, 1.25**4, 1.25**5]
+    delays = [ca.args[0] for ca in m.call_args_list]
+    for exp, actual in zip(expected, delays):
+        assert isclose(actual, exp, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_retries_exhausted(mocker: MockerFixture) -> None:
+    for _ in range(10):
+        responses.get(
+            "https://github.example.com/api/flakey",
+            status=500,
+            match=(
+                responses.matchers.query_param_matcher({}),
+                responses.matchers.header_matcher(
+                    {
+                        "Accept": "application/vnd.github+json",
+                        "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                    }
+                ),
+            ),
+        )
+    m = mocker.patch("time.sleep")
+    with GitHub(api_url="https://github.example.com/api") as client:
+        with pytest.raises(PrettyHTTPError) as exc:
+            client.get("/flakey")
+        assert str(exc.value) == (
+            "500 Server Error: Internal Server Error for URL:"
+            " https://github.example.com/api/flakey"
+        )
+    assert m.call_count == 10
+    expected = [0.1] + [1.25**i for i in range(9)]
+    delays = [ca.args[0] for ca in m.call_args_list]
+    for exp, actual in zip(expected, delays):
+        assert isclose(actual, exp, rel_tol=0.3, abs_tol=0.1)
