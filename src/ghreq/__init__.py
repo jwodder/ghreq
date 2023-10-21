@@ -1,5 +1,5 @@
 """
-Minimal yet well-configured GitHub API client
+Minimal and opinionated GitHub API client
 
 Visit <https://github.com/jwodder/ghreq> for more information.
 """
