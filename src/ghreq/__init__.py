@@ -37,6 +37,8 @@ log = logging.getLogger(__name__)
 
 DEFAULT_API_URL = "https://api.github.com"
 
+DEFAULT_API_VERSION = "2022-11-28"
+
 MUTATING_METHODS = frozenset(["POST", "PATCH", "PUT", "DELETE"])
 
 if TYPE_CHECKING:
@@ -58,6 +60,7 @@ class GitHub:
         api_url: str = DEFAULT_API_URL,
         session: requests.Session | None = None,
         user_agent: str | None = None,
+        api_version: str | None = DEFAULT_API_VERSION,
         mutation_delay: float = 1.0,
         retry_config: RetryConfig | None = None,
     ) -> None:
@@ -69,7 +72,8 @@ class GitHub:
                 session.headers["Authorization"] = f"Bearer {token}"
             if user_agent is not None:
                 session.headers["User-Agent"] = user_agent
-            session.headers["X-GitHub-Api-Version"] = "2022-11-28"
+            if api_version is not None:
+                session.headers["X-GitHub-Api-Version"] = api_version
         # No headers are set on pre-supplied sessions
         self.session = session
         # GitHub recommends waiting 1 second between non-GET requests in order
