@@ -40,13 +40,14 @@ DEFAULT_API_URL = "https://api.github.com"
 MUTATING_METHODS = frozenset(["POST", "PATCH", "PUT", "DELETE"])
 
 if TYPE_CHECKING:
+    from typing import Union
     from typing_extensions import TypeAlias
 
-    ParamsValue: TypeAlias = (
-        str | bytes | int | float | Iterable[str | bytes | int | float] | None
-    )
-    ParamsType: TypeAlias = Mapping[str, ParamsValue] | None
-    HeadersType: TypeAlias = Mapping[str, str | bytes | None] | None
+    ParamsValue: TypeAlias = Union[
+        str, bytes, int, float, Iterable[Union[str, bytes, int, float]], None
+    ]
+    ParamsType: TypeAlias = Union[Mapping[str, ParamsValue], None]
+    HeadersType: TypeAlias = Union[Mapping[str, Union[str, bytes, None]], None]
 
 
 class GitHub:
