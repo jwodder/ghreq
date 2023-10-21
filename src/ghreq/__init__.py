@@ -102,6 +102,7 @@ class GitHub:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: bytes | None = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
         if path.lower().startswith(("http://", "https://")):
@@ -119,8 +120,16 @@ class GitHub:
                 sleep(mutdelay)
         req = self.session.prepare_request(
             requests.Request(
-                method, url, params=params, headers=headers, json=json, data=data
+                method,
+                url,
+                params=params,
+                headers=headers,
+                json=json,
+                data=data,
             )
+        )
+        send_kwargs = self.session.merge_environment_settings(
+            req.url, proxies={}, stream=stream, verify=None, cert=None
         )
         retrier = Retrier(self.retry_config)
         try:
@@ -128,7 +137,7 @@ class GitHub:
                 try:
                     if method in MUTATING_METHODS:
                         self.last_mutation = nowdt()
-                    r = self.session.send(req)
+                    r = self.session.send(req, **send_kwargs)
                     r.raise_for_status()
                     break
                 except ValueError:
@@ -160,7 +169,7 @@ class GitHub:
                 raise PrettyHTTPError(e.response)
             else:
                 raise
-        if raw:
+        if stream or raw:
             return r
         elif r.status_code == 204 or r.text.strip() == "":
             return None
@@ -173,9 +182,12 @@ class GitHub:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
-        return self.request("GET", path, params=params, headers=headers, raw=raw)
+        return self.request(
+            "GET", path, params=params, headers=headers, stream=stream, raw=raw
+        )
 
     def post(
         self,
@@ -185,10 +197,18 @@ class GitHub:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: bytes | None = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
         return self.request(
-            "POST", path, params=params, headers=headers, json=json, data=data, raw=raw
+            "POST",
+            path,
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            stream=stream,
+            raw=raw,
         )
 
     def put(
@@ -199,10 +219,18 @@ class GitHub:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: bytes | None = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
         return self.request(
-            "PUT", path, params=params, headers=headers, json=json, data=data, raw=raw
+            "PUT",
+            path,
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            stream=stream,
+            raw=raw,
         )
 
     def patch(
@@ -213,10 +241,18 @@ class GitHub:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: bytes | None = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
         return self.request(
-            "PATCH", path, params=params, headers=headers, json=json, data=data, raw=raw
+            "PATCH",
+            path,
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            stream=stream,
+            raw=raw,
         )
 
     def delete(
@@ -227,6 +263,7 @@ class GitHub:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: bytes | None = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
         return self.request(
@@ -236,6 +273,7 @@ class GitHub:
             headers=headers,
             json=json,
             data=data,
+            stream=stream,
             raw=raw,
         )
 
@@ -279,6 +317,7 @@ class Endpoint:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: bytes | None = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
         return self.client.request(
@@ -288,6 +327,7 @@ class Endpoint:
             params=params,
             headers=headers,
             data=data,
+            stream=stream,
             raw=raw,
         )
 
@@ -296,9 +336,12 @@ class Endpoint:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
-        return self.request("GET", params=params, headers=headers, raw=raw)
+        return self.request(
+            "GET", params=params, headers=headers, stream=stream, raw=raw
+        )
 
     def post(
         self,
@@ -307,10 +350,17 @@ class Endpoint:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: bytes | None = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
         return self.request(
-            "POST", params=params, headers=headers, json=json, data=data, raw=raw
+            "POST",
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            stream=stream,
+            raw=raw,
         )
 
     def put(
@@ -320,10 +370,17 @@ class Endpoint:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: bytes | None = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
         return self.request(
-            "PUT", params=params, headers=headers, json=json, data=data, raw=raw
+            "PUT",
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            stream=stream,
+            raw=raw,
         )
 
     def patch(
@@ -333,10 +390,17 @@ class Endpoint:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: bytes | None = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
         return self.request(
-            "PATCH", params=params, headers=headers, json=json, data=data, raw=raw
+            "PATCH",
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            stream=stream,
+            raw=raw,
         )
 
     def delete(
@@ -346,10 +410,17 @@ class Endpoint:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: bytes | None = None,
+        stream: bool = False,
         raw: bool = False,
     ) -> Any:
         return self.request(
-            "DELETE", params=params, headers=headers, json=json, data=data, raw=raw
+            "DELETE",
+            params=params,
+            headers=headers,
+            json=json,
+            data=data,
+            stream=stream,
+            raw=raw,
         )
 
     def paginate(
