@@ -5,7 +5,7 @@ Visit <https://github.com/jwodder/ghreq> for more information.
 """
 
 from __future__ import annotations
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Container, Iterable, Iterator, Mapping
 from dataclasses import InitVar, dataclass, field
 from datetime import datetime, timedelta, timezone
 import json
@@ -54,6 +54,8 @@ class RetryConfig:
     backoff_jitter: float = 0.0
     backoff_max: float = 120.0
     total_wait: float = 600.0  ### TODO: Rethink this default
+    ### TODO: Am I sure 501 errors should be retried?
+    retry_statuses: Container[int] = range(500, 600)
 
     def backoff(self, attempts: int) -> float:
         if attempts < 2:
@@ -288,11 +290,12 @@ class Retrier:
                 else:
                     log.debug("Secondary rate limit triggered")
                     delay = backoff
+            elif response.status_code in self.config.retry_statuses:
+                delay = backoff
             else:
                 return None
             delay = max(delay, backoff)
-        elif response.status_code >= 500:
-            ### TODO: Am I sure 501 errors should be retried?
+        elif response.status_code in self.config.retry_statuses:
             delay = backoff
         else:
             return None
