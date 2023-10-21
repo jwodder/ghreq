@@ -1,5 +1,11 @@
+"""
+Minimal yet well-configured GitHub API client
+
+Visit <https://github.com/jwodder/ghreq> for more information.
+"""
+
 from __future__ import annotations
-from collections.abc import Iterator, Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import InitVar, dataclass, field
 from datetime import datetime, timedelta, timezone
 import json
@@ -9,8 +15,14 @@ import platform
 from random import random
 from time import sleep, time
 from types import TracebackType
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 import requests
+
+__version__ = "0.1.0.dev1"
+__author__ = "John Thorvald Wodder II"
+__author_email__ = "ghreq@varonathe.org"
+__license__ = "MIT"
+__url__ = "https://github.com/jwodder/ghreq"
 
 log = logging.getLogger(__name__)
 
@@ -123,13 +135,15 @@ class GitHub:
                     if (delay := retrier(e.response)) is not None:
                         if isinstance(e, requests.HTTPError) and e.response is not None:
                             log.warning(
-                                "Server returned %d response; waiting %f seconds and retrying",
+                                "Server returned %d response; waiting %f"
+                                " seconds and retrying",
                                 e.response.status_code,
                                 delay,
                             )
                         else:
                             log.warning(
-                                "Request failed: %s: %s; waiting %f seconds and retrying",
+                                "Request failed: %s: %s; waiting %f seconds and"
+                                " retrying",
                                 type(e).__name__,
                                 str(e),
                                 delay,
