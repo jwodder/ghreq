@@ -821,7 +821,7 @@ def make_user_agent(
         s += f"/{version}"
     if url is not None:
         s += f" ({url})"
-    s += "requests/{} {}/{}".format(
+    s += " requests/{} {}/{}".format(
         requests.__version__,
         platform.python_implementation(),
         platform.python_version(),
