@@ -1,5 +1,5 @@
-v0.2.0 (in development)
------------------------
+v0.2.0 (2023-11-03)
+-------------------
 - The `version` argument to `make_user_agent()` is now optional
 - The `url` argument to `make_user_agent()` is now actually optional
 
