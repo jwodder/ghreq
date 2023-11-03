@@ -49,7 +49,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Any, Literal, overload
 import requests
 
-__version__ = "0.1.1"
+__version__ = "0.2.0.dev1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "ghreq@varonathe.org"
 __license__ = "MIT"
@@ -808,13 +808,17 @@ class PrettyHTTPError(requests.HTTPError):
         return msg
 
 
-def make_user_agent(name: str, version: str, url: str | None) -> str:
+def make_user_agent(
+    name: str, version: str | None = None, url: str | None = None
+) -> str:
     """
-    Create a user agent string with the given client name, version, and
-    optional URL.  The string will also include the version of the `requests`
-    library used and the implemention & version of Python.
+    Create a user agent string with the given client name, optional version,
+    and optional URL.  The string will also include the version of the
+    `requests` library used and the implemention & version of Python.
     """
-    s = f"{name}/{version}"
+    s = name
+    if version is not None:
+        s += f"/{version}"
     if url is not None:
         s += f" ({url})"
     s += "requests/{} {}/{}".format(

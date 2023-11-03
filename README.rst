@@ -382,11 +382,11 @@ Utility Functions
 
 .. code:: python
 
-    make_user_agent(name: str, version: str, url: str | None) -> str
+    make_user_agent(name: str, version: str | None = None, url: str | None = None) -> str
 
-Create a user agent string with the given client name, version, and optional
-URL.  The string will also include the version of the ``requests`` library used
-and the implemention & version of Python.
+Create a user agent string with the given client name, optional version, and
+optional URL.  The string will also include the version of the ``requests``
+library used and the implemention & version of Python.
 
 .. code:: python
 
