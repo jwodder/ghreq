@@ -97,6 +97,7 @@ Constructor arguments:
 
 ``session``
     A pre-configured ``requests.Session`` instance to use for making requests.
+
     If no session is supplied, ``Client`` instantiates a new session and sets
     the following request headers on it.  (These headers are not set on
     sessions passed to the constructor.)
@@ -106,6 +107,7 @@ Constructor arguments:
       non-``None``)
     - ``User-Agent`` (if ``user_agent`` is non-``None``)
     - ``X-GitHub-Api-Version`` (if ``api_version`` is non-``None``)
+    - any additional headers included in ``headers``
 
 ``user_agent``
     A user agent string to include in the headers of requests.  If not set, the
@@ -122,6 +124,12 @@ Constructor arguments:
 ``api_version``
     Value to set the ``X-GitHub-Api-Version`` header to.  Can be set to
     ``None`` to not set the header at all.
+
+    This argument is ignored if a non-``None`` ``session`` is supplied.
+
+``headers``
+    Optional mapping of additional headers to set on the session after setting
+    all other headers.
 
     This argument is ignored if a non-``None`` ``session`` is supplied.
 

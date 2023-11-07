@@ -115,6 +115,7 @@ class Client:
         user_agent: str | None = None,
         accept: str | None = DEFAULT_ACCEPT,
         api_version: str | None = DEFAULT_API_VERSION,
+        headers: Mapping[str, str] | None = None,
         mutation_delay: float = 1.0,
         retry_config: RetryConfig | None = None,
     ) -> None:
@@ -129,9 +130,11 @@ class Client:
 
         :param session:
             A pre-configured `requests.Session` instance to use for making
-            requests.  If no session is supplied, `Client` instantiates a new
-            session and sets the following request headers on it.  (These
-            headers are not set on sessions passed to the constructor.)
+            requests.
+
+            If no session is supplied, `Client` instantiates a new session and
+            sets the following request headers on it.  (These headers are not
+            set on sessions passed to the constructor.)
 
             - :mailheader:`Accept` (if ``accept`` is non-`None`)
             - :mailheader:`Authorization` (set to ``"Bearer {token}"`` if
@@ -139,6 +142,7 @@ class Client:
             - :mailheader:`User-Agent` (if ``user_agent`` is non-`None`)
             - :mailheader:`X-GitHub-Api-Version` (if ``api_version`` is
               non-`None`)
+            - any additional headers included in ``headers``
 
         :param user_agent:
             A user agent string to include in the headers of requests.  If not
@@ -155,6 +159,12 @@ class Client:
         :param api_version:
             Value to set the :mailheader:`X-GitHub-Api-Version` header to.  Can
             be set to `None` to not set the header at all.
+
+            This argument is ignored if a non-`None` ``session`` is supplied.
+
+        :param headers:
+            Optional mapping of additional headers to set on the session after
+            setting all other headers.
 
             This argument is ignored if a non-`None` ``session`` is supplied.
 
@@ -181,6 +191,8 @@ class Client:
                 session.headers["X-GitHub-Api-Version"] = api_version
             if accept is not None:
                 session.headers["Accept"] = accept
+            if headers is not None:
+                session.headers.update(headers)
         # No headers are set on pre-supplied sessions
         self.session = session
         # GitHub recommends waiting 1 second between non-GET requests in order

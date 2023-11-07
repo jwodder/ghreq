@@ -2,6 +2,8 @@ v0.3.0 (in development)
 -----------------------
 - A session-wide `Accept` header can now be specified when constructing a
   `Client` without having to use a custom `Session`
+- Added a `headers` argument to the `Client` constructor for setting arbitrary
+  additional headers without having to use a custom `Session`
 
 v0.2.0 (2023-11-03)
 -------------------
