@@ -49,7 +49,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Any, Literal, overload
 import requests
 
-__version__ = "0.2.0"
+__version__ = "0.3.0.dev1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "ghreq@varonathe.org"
 __license__ = "MIT"
@@ -66,8 +66,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
-#: The value the :mailheader:`Accept` header is set to when `Client` constructs
-#: a new `requests.Session` instance
+#: The default value of the ``accept`` argument to the `Client` constructor
 DEFAULT_ACCEPT = "application/vnd.github+json"
 
 #: The default value of the ``api_url`` argument to the `Client` constructor
@@ -114,6 +113,7 @@ class Client:
         api_url: str = DEFAULT_API_URL,
         session: requests.Session | None = None,
         user_agent: str | None = None,
+        accept: str | None = DEFAULT_ACCEPT,
         api_version: str | None = DEFAULT_API_VERSION,
         mutation_delay: float = 1.0,
         retry_config: RetryConfig | None = None,
@@ -133,7 +133,7 @@ class Client:
             session and sets the following request headers on it.  (These
             headers are not set on sessions passed to the constructor.)
 
-            - :mailheader:`Accept` (set to `DEFAULT_ACCEPT`)
+            - :mailheader:`Accept` (if ``accept`` is non-`None`)
             - :mailheader:`Authorization` (set to ``"Bearer {token}"`` if
               ``token`` is non-`None`)
             - :mailheader:`User-Agent` (if ``user_agent`` is non-`None`)
@@ -143,6 +143,12 @@ class Client:
         :param user_agent:
             A user agent string to include in the headers of requests.  If not
             set, the `requests` library's default user agent is used.
+
+            This argument is ignored if a non-`None` ``session`` is supplied.
+
+        :param accept:
+            Value to set the :mailheader:`Accept` header to.  Can be set to
+            `None` to not set the header at all.
 
             This argument is ignored if a non-`None` ``session`` is supplied.
 
@@ -167,13 +173,14 @@ class Client:
         self.api_url = api_url
         if session is None:
             session = requests.Session()
-            session.headers["Accept"] = DEFAULT_ACCEPT
             if token is not None:
                 session.headers["Authorization"] = f"Bearer {token}"
             if user_agent is not None:
                 session.headers["User-Agent"] = user_agent
             if api_version is not None:
                 session.headers["X-GitHub-Api-Version"] = api_version
+            if accept is not None:
+                session.headers["Accept"] = accept
         # No headers are set on pre-supplied sessions
         self.session = session
         # GitHub recommends waiting 1 second between non-GET requests in order

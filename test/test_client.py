@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections.abc import Callable
 from datetime import timedelta
 from math import isclose
 import sys
@@ -112,6 +113,21 @@ def test_get(mocker: MockerFixture) -> None:
 
 @responses.activate
 def test_header_args() -> None:
+    def match_unset_headers(
+        headers: list[str],
+    ) -> Callable[[requests.PreparedRequest], tuple[bool, str]]:
+        def matcher(req: requests.PreparedRequest) -> tuple[bool, str]:
+            msg = []
+            for h in headers:
+                if h in req.headers:
+                    msg.append(f"Header {h!r} unexpectedly in request")
+            if msg:
+                return (False, "; ".join(msg))
+            else:
+                return (True, "")
+
+        return matcher
+
     responses.get(
         "https://github.example.com/api/greet",
         json={"hello": "world"},
@@ -119,7 +135,7 @@ def test_header_args() -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": DEFAULT_ACCEPT,
+                    "Accept": "application/octet-stream",
                     "Authorization": "Bearer hunter2",
                     "User-Agent": "Test/0.0.0",
                     "X-GitHub-Api-Version": "2525-01-01",
@@ -134,7 +150,7 @@ def test_header_args() -> None:
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
                 {
-                    "Accept": DEFAULT_ACCEPT,
+                    "accept": "text/html",
                     "Authorization": "token hunter3",
                     "user-agent": "Python",
                     "x-github-api-version": "1970-01-01",
@@ -146,6 +162,7 @@ def test_header_args() -> None:
         token="hunter2",
         api_url="https://github.example.com/api",
         user_agent="Test/0.0.0",
+        accept="application/octet-stream",
         api_version="2525-01-01",
     ) as client:
         assert client.get("/greet") == {"hello": "world"}
@@ -155,6 +172,7 @@ def test_header_args() -> None:
                 "Authorization": "token hunter3",
                 "user-agent": "Python",
                 "x-github-api-version": "1970-01-01",
+                "accept": "text/html",
             },
         ) == {"hello": "hunter3"}
     responses.get(
@@ -162,10 +180,11 @@ def test_header_args() -> None:
         json={"hello": "world"},
         match=(
             responses.matchers.query_param_matcher({}),
-            responses.matchers.header_matcher({"Accept": DEFAULT_ACCEPT}),
+            responses.matchers.header_matcher({"Accept": "*/*"}),
+            match_unset_headers(["Authorization", "X-GitHub-Api-Version"]),
         ),
     )
-    with Client(api_version=None) as client:
+    with Client(api_version=None, accept=None) as client:
         assert client.get("/greet") == {"hello": "world"}
 
 

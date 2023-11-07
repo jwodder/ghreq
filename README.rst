@@ -76,6 +76,7 @@ Classes
             api_url: str = DEFAULT_API_URL,
             session: requests.Session | None = None,
             user_agent: str | None = None,
+            accept: str | None = DEFAULT_ACCEPT,
             api_version: str | None = DEFAULT_API_VERSION,
             mutation_delay: float = 1.0,
             retry_config: RetryConfig | None = None,
@@ -100,7 +101,7 @@ Constructor arguments:
     the following request headers on it.  (These headers are not set on
     sessions passed to the constructor.)
 
-    - ``Accept`` (set to ``DEFAULT_ACCEPT``)
+    - ``Accept`` (if ``accept`` is non-``None``)
     - ``Authorization`` (set to ``"Bearer {token}"`` if ``token`` is
       non-``None``)
     - ``User-Agent`` (if ``user_agent`` is non-``None``)
@@ -109,6 +110,12 @@ Constructor arguments:
 ``user_agent``
     A user agent string to include in the headers of requests.  If not set, the
     ``requests`` library's default user agent is used.
+
+    This argument is ignored if a non-``None`` ``session`` is supplied.
+
+``accept``
+    Value to set the ``Accept`` header to.  Can be set to ``None`` to not set
+    the header at all.
 
     This argument is ignored if a non-``None`` ``session`` is supplied.
 
@@ -361,8 +368,7 @@ Constants
 
     DEFAULT_ACCEPT = "application/vnd.github+json"
 
-The value the ``Accept`` header is set to when ``Client`` constructs a new
-``requests.Session`` instance
+The default value of the ``accept`` argument to the ``Client`` constructor
 
 .. code:: python
 
