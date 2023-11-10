@@ -298,6 +298,16 @@ returned iterator will yield each page as a ``requests.Response`` object.
 
 .. code:: python
 
+    Client.close() -> None
+
+Close the client's internal ``requests.Session``.  No more request methods may
+be called afterwards.
+
+This method is called automatically on exit when using ``Client`` as a context
+manager.
+
+.. code:: python
+
     class Endpoint:
         client: Client
         url: str

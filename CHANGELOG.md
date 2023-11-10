@@ -4,6 +4,7 @@ v0.3.0 (in development)
   `Client` without having to use a custom `Session`
 - Added a `headers` argument to the `Client` constructor for setting arbitrary
   additional headers without having to use a custom `Session`
+- Gave `Client` a `close()` method
 
 v0.2.0 (2023-11-03)
 -------------------

@@ -212,7 +212,7 @@ class Client:
         _exc_val: BaseException | None,
         _exc_tb: TracebackType | None,
     ) -> None:
-        self.session.close()
+        self.close()
 
     def __truediv__(self, path: str) -> Endpoint:
         return Endpoint(self, joinurl(self.api_url, path))
@@ -513,6 +513,16 @@ class Client:
                     yield from itemses[0]
             path = r.links.get("next", {}).get("url")
             params = None
+
+    def close(self) -> None:
+        """
+        Close the client's internal `requests.Session`.  No more request
+        methods may be called afterwards.
+
+        This method is called automatically on exit when using `Client` as a
+        context manager.
+        """
+        self.session.close()
 
 
 @dataclass
