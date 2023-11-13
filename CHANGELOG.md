@@ -1,3 +1,8 @@
+v0.3.1 (in development)
+-----------------------
+- Adjusted the type hints on `PrettyHTTPError` to indicate that the `response`
+  attribute is always non-`None`
+
 v0.3.0 (2023-11-10)
 -------------------
 - A session-wide `Accept` header can now be specified when constructing a

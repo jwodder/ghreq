@@ -49,7 +49,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Any, Literal, overload
 import requests
 
-__version__ = "0.3.0"
+__version__ = "0.3.1.dev1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "ghreq@varonathe.org"
 __license__ = "MIT"
@@ -816,8 +816,9 @@ class PrettyHTTPError(requests.HTTPError):
     will be pretty-printed.
     """
 
+    response: requests.Response
+
     def __str__(self) -> str:
-        assert self.response is not None
         if 400 <= self.response.status_code < 500:
             msg = "{0.status_code} Client Error: {0.reason} for URL: {0.url}"
         elif 500 <= self.response.status_code < 600:
