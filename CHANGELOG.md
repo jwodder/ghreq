@@ -1,5 +1,6 @@
 v0.4.0 (in development)
 -----------------------
+- Migrated from setuptools to hatch
 
 v0.3.1 (2023-11-13)
 -------------------
