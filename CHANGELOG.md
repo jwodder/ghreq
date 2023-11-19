@@ -1,3 +1,6 @@
+v0.4.0 (in development)
+-----------------------
+
 v0.3.1 (2023-11-13)
 -------------------
 - Adjusted the type hints on `PrettyHTTPError` to indicate that the `response`
