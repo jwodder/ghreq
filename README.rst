@@ -64,8 +64,8 @@ for Python 3 (You have pip, right?) to install it::
 API
 ===
 
-Classes
--------
+``Client`` Class
+----------------
 
 .. code:: python
 
@@ -321,6 +321,10 @@ be called afterwards.
 This method is called automatically on exit when using ``Client`` as a context
 manager.
 
+
+``Endpoint`` Class
+------------------
+
 .. code:: python
 
     class Endpoint:
@@ -351,17 +355,21 @@ following are equivalent:
 
     (client / "repos" / "octocat" / "hello-world").get()
 
+
+``RetryConfig`` Class
+---------------------
+
 .. code:: python
 
     class RetryConfig:
         def __init__(
-           retries: int = 10,
-           backoff_factor: float = 1.0,
-           backoff_base: float = 1.25,
-           backoff_jitter: float = 0.0
-           backoff_max: float = 120.0,
-           total_wait: float | None = 300.0,
-           retry_statuses: Container[int] = range(500, 600),
+            retries: int = 10,
+            backoff_factor: float = 1.0,
+            backoff_base: float = 1.25,
+            backoff_jitter: float = 0.0
+            backoff_max: float = 120.0,
+            total_wait: float | None = 300.0,
+            retry_statuses: Container[int] = range(500, 600),
         )
 
 A container for storing configuration for ``ghreq``'s retrying mechanism.  A
@@ -382,6 +390,10 @@ backoff_base ** (retry_number - 1) + random.random() * backoff_jitter``
 seconds, up to a maximum of ``backoff_max`` per retry.  If a ``Retry-After`` or
 ``x-ratelimit-reset`` header indicates a larger duration to sleep for, that
 value is used instead.
+
+
+``PrettyHTTPError`` Class
+-------------------------
 
 .. code:: python
 
