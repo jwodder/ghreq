@@ -247,6 +247,7 @@ class Client:
         headers: HeadersType = None,
         data: DataType = None,
         timeout: TimeoutType = None,
+        allow_redirects: bool = True,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -303,7 +304,10 @@ class Client:
                 data=data,
             )
         )
-        send_kwargs: dict[str, Any] = {"timeout": timeout}
+        send_kwargs: dict[str, Any] = {
+            "allow_redirects": allow_redirects,
+            "timeout": timeout,
+        }
         send_kwargs.update(
             **self.session.merge_environment_settings(
                 req.url, proxies={}, stream=stream, verify=None, cert=None
@@ -612,6 +616,7 @@ class Endpoint:
         headers: HeadersType = None,
         data: DataType = None,
         timeout: TimeoutType = None,
+        allow_redirects: bool = True,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -623,6 +628,7 @@ class Endpoint:
             headers=headers,
             data=data,
             timeout=timeout,
+            allow_redirects=allow_redirects,
             stream=stream,
             raw=raw,
         )

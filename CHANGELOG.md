@@ -4,6 +4,8 @@ v0.4.0 (in development)
 - Added a `set_headers` argument to the `Client` constructor for explicitly
   setting or not setting headers on sessions
 - Added `timeout` arguments to the request methods
+- Added `allow_redirects` argument to `Client.request()` and
+  `Endpoint.request()`
 
 v0.3.1 (2023-11-13)
 -------------------

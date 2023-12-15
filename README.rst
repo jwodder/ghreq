@@ -178,6 +178,7 @@ to obtain an ``Endpoint`` instance that makes requests to the URL formed from
         headers: HeadersType = None,
         data: DataType = None,
         timeout: TimeoutType = None,
+        allow_redirects: bool = True,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
