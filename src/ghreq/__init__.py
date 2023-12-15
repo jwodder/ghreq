@@ -90,6 +90,7 @@ if TYPE_CHECKING:
     DataType: TypeAlias = Union[
         Iterable[bytes], str, bytes, IO, List[Tuple[Any, Any]], Mapping[Any, Any], None
     ]
+    TimeoutType: TypeAlias = Union[float, Tuple[float, float], Tuple[float, None], None]
 
 
 class Client:
@@ -245,6 +246,7 @@ class Client:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -301,8 +303,11 @@ class Client:
                 data=data,
             )
         )
-        send_kwargs = self.session.merge_environment_settings(
-            req.url, proxies={}, stream=stream, verify=None, cert=None
+        send_kwargs: dict[str, Any] = {"timeout": timeout}
+        send_kwargs.update(
+            **self.session.merge_environment_settings(
+                req.url, proxies={}, stream=stream, verify=None, cert=None
+            )
         )
         retrier = Retrier(self.retry_config)
         try:
@@ -355,6 +360,7 @@ class Client:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -363,7 +369,13 @@ class Client:
         more information.
         """
         return self.request(
-            "GET", path, params=params, headers=headers, stream=stream, raw=raw
+            "GET",
+            path,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            stream=stream,
+            raw=raw,
         )
 
     def post(
@@ -374,6 +386,7 @@ class Client:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -388,6 +401,7 @@ class Client:
             headers=headers,
             json=json,
             data=data,
+            timeout=timeout,
             stream=stream,
             raw=raw,
         )
@@ -400,6 +414,7 @@ class Client:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -414,6 +429,7 @@ class Client:
             headers=headers,
             json=json,
             data=data,
+            timeout=timeout,
             stream=stream,
             raw=raw,
         )
@@ -426,6 +442,7 @@ class Client:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -440,6 +457,7 @@ class Client:
             headers=headers,
             json=json,
             data=data,
+            timeout=timeout,
             stream=stream,
             raw=raw,
         )
@@ -452,6 +470,7 @@ class Client:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -466,6 +485,7 @@ class Client:
             headers=headers,
             json=json,
             data=data,
+            timeout=timeout,
             stream=stream,
             raw=raw,
         )
@@ -477,6 +497,7 @@ class Client:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        timeout: TimeoutType = None,
         raw: Literal[False] = False,
     ) -> Iterator[dict]:
         ...
@@ -488,6 +509,7 @@ class Client:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        timeout: TimeoutType = None,
         raw: Literal[True],
     ) -> Iterator[requests.Response]:
         ...
@@ -498,6 +520,7 @@ class Client:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        timeout: TimeoutType = None,
         raw: Literal[True, False] = False,
     ) -> Iterator:
         """
@@ -515,7 +538,9 @@ class Client:
         returned iterator will yield each page as a `requests.Response` object.
         """
         while path is not None:
-            r = self.get(path, params=params, headers=headers, raw=True)
+            r = self.get(
+                path, params=params, headers=headers, timeout=timeout, raw=True
+            )
             if raw:
                 yield r
             else:
@@ -586,6 +611,7 @@ class Endpoint:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -596,6 +622,7 @@ class Endpoint:
             params=params,
             headers=headers,
             data=data,
+            timeout=timeout,
             stream=stream,
             raw=raw,
         )
@@ -605,11 +632,17 @@ class Endpoint:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
         return self.request(
-            "GET", params=params, headers=headers, stream=stream, raw=raw
+            "GET",
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            stream=stream,
+            raw=raw,
         )
 
     def post(
@@ -619,6 +652,7 @@ class Endpoint:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -628,6 +662,7 @@ class Endpoint:
             headers=headers,
             json=json,
             data=data,
+            timeout=timeout,
             stream=stream,
             raw=raw,
         )
@@ -639,6 +674,7 @@ class Endpoint:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -648,6 +684,7 @@ class Endpoint:
             headers=headers,
             json=json,
             data=data,
+            timeout=timeout,
             stream=stream,
             raw=raw,
         )
@@ -659,6 +696,7 @@ class Endpoint:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -668,6 +706,7 @@ class Endpoint:
             headers=headers,
             json=json,
             data=data,
+            timeout=timeout,
             stream=stream,
             raw=raw,
         )
@@ -679,6 +718,7 @@ class Endpoint:
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any:
@@ -688,6 +728,7 @@ class Endpoint:
             headers=headers,
             json=json,
             data=data,
+            timeout=timeout,
             stream=stream,
             raw=raw,
         )
@@ -698,6 +739,7 @@ class Endpoint:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        timeout: TimeoutType = None,
         raw: Literal[False] = False,
     ) -> Iterator[dict]:
         ...
@@ -708,6 +750,7 @@ class Endpoint:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        timeout: TimeoutType = None,
         raw: Literal[True],
     ) -> Iterator[requests.Response]:
         ...
@@ -717,9 +760,12 @@ class Endpoint:
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        timeout: TimeoutType = None,
         raw: Literal[True, False] = False,
     ) -> Iterator:
-        return self.client.paginate(self.url, params=params, headers=headers, raw=raw)
+        return self.client.paginate(
+            self.url, params=params, headers=headers, timeout=timeout, raw=raw
+        )
 
 
 @dataclass

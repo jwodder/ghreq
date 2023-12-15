@@ -177,6 +177,7 @@ to obtain an ``Endpoint`` instance that makes requests to the URL formed from
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
@@ -218,6 +219,7 @@ raised.
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
@@ -234,6 +236,7 @@ information.
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
@@ -250,6 +253,7 @@ information.
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
@@ -266,6 +270,7 @@ information.
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
@@ -282,6 +287,7 @@ information.
         params: ParamsType = None,
         headers: HeadersType = None,
         data: DataType = None,
+        timeout: TimeoutType = None,
         stream: bool = False,
         raw: bool = False,
     ) -> Any
@@ -296,6 +302,7 @@ information.
         *,
         params: ParamsType = None,
         headers: HeadersType = None,
+        timeout: TimeoutType = None,
         raw: Literal[True, False] = False,
     ) -> Iterator
 
