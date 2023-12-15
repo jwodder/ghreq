@@ -75,6 +75,7 @@ Classes
             token: str | None = None,
             api_url: str = DEFAULT_API_URL,
             session: requests.Session | None = None,
+            set_headers: bool | None = None,
             user_agent: str | None = None,
             accept: str | None = DEFAULT_ACCEPT,
             api_version: str | None = DEFAULT_API_VERSION,
@@ -90,17 +91,23 @@ Constructor arguments:
 ``token``
     The GitHub access token, if any, to use to authenticate to the API.
 
-    This argument is ignored if a non-``None`` ``session`` is supplied.
+    This argument is ignored if ``set_headers`` is ``False`` or defaulted to
+    ``False``.
 
 ``api_url``
     The base URL to which to append paths passed to the request methods
 
 ``session``
     A pre-configured ``requests.Session`` instance to use for making requests.
+    If no session is supplied, a new session is instantiated.
 
-    If no session is supplied, ``Client`` instantiates a new session and sets
-    the following request headers on it.  (These headers are not set on
-    sessions passed to the constructor.)
+``set_headers``
+    Whether to set various headers for requests made via the session.  If
+    ``set_headers`` is ``None``, it is defaulted to ``True`` if ``session`` is
+    ``None`` and to ``False`` otherwise.
+
+    If ``set_headers`` is ``True`` or defaulted to ``True``, the following
+    request headers are set on the session:
 
     - ``Accept`` (if ``accept`` is non-``None``)
     - ``Authorization`` (set to ``"Bearer {token}"`` if ``token`` is
@@ -109,29 +116,37 @@ Constructor arguments:
     - ``X-GitHub-Api-Version`` (if ``api_version`` is non-``None``)
     - any additional headers included in ``headers``
 
+    If ``set_headers`` is ``False`` or defaulted to ``False``, then ``Client``
+    does not set any headers on the session, and the other header-related
+    parameters are ignored.
+
 ``user_agent``
     A user agent string to include in the headers of requests.  If not set, the
     ``requests`` library's default user agent is used.
 
-    This argument is ignored if a non-``None`` ``session`` is supplied.
+    This argument is ignored if ``set_headers`` is ``False`` or defaulted to
+    ``False``.
 
 ``accept``
     Value to set the ``Accept`` header to.  Can be set to ``None`` to not set
     the header at all.
 
-    This argument is ignored if a non-``None`` ``session`` is supplied.
+    This argument is ignored if ``set_headers`` is ``False`` or defaulted to
+    ``False``.
 
 ``api_version``
     Value to set the ``X-GitHub-Api-Version`` header to.  Can be set to
     ``None`` to not set the header at all.
 
-    This argument is ignored if a non-``None`` ``session`` is supplied.
+    This argument is ignored if ``set_headers`` is ``False`` or defaulted to
+    ``False``.
 
 ``headers``
     Optional mapping of additional headers to set on the session after setting
     all other headers.
 
-    This argument is ignored if a non-``None`` ``session`` is supplied.
+    This argument is ignored if ``set_headers`` is ``False`` or defaulted to
+    ``False``.
 
 ``mutation_delay``
     When making a ``POST``, ``PATCH``, ``PUT``, or ``DELETE`` request, if the
