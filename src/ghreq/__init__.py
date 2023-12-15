@@ -49,7 +49,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Any, Literal, overload
 import requests
 
-__version__ = "0.4.0.dev1"
+__version__ = "0.4.0"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "ghreq@varonathe.org"
 __license__ = "MIT"

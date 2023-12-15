@@ -1,5 +1,5 @@
-v0.4.0 (in development)
------------------------
+v0.4.0 (2023-12-15)
+-------------------
 - Migrated from setuptools to hatch
 - Added a `set_headers` argument to the `Client` constructor for explicitly
   setting or not setting headers on sessions
