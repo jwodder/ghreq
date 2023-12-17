@@ -1,5 +1,5 @@
-v0.5.0 (in development)
------------------------
+v0.5.0 (2023-12-17)
+-------------------
 - When a 403 response is received with a `Retry-After` or `x-ratelimit-reset`
   header that would result in the next retry attempt being after `total_wait`
   is exceeded, don't retry.
