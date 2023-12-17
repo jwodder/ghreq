@@ -49,7 +49,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Any, Literal, overload
 import requests
 
-__version__ = "0.4.0"
+__version__ = "0.5.0.dev1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "ghreq@varonathe.org"
 __license__ = "MIT"
@@ -795,7 +795,9 @@ class RetryConfig:
     * backoff_base ** (retry_number - 1) + random.random() * backoff_jitter``
     seconds, up to a maximum of ``backoff_max`` per retry.  If a
     :mailheader:`Retry-After` or :mailheader:`x-ratelimit-reset` header
-    indicates a larger duration to sleep for, that value is used instead.
+    indicates a larger duration to sleep for, that value is used instead.  If
+    the duration indicated by such a header would result in the next retry
+    attempt being after ``total_wait`` is exceeded, retrying stops early.
     """
 
     retries: int = 10
@@ -837,9 +839,13 @@ class Retrier:
             log.debug("Retries exhausted")
             return None
         now = nowdt()
-        if self.stop_time is not None and now >= self.stop_time:
-            log.debug("Maximum total retry wait time exceeded")
-            return None
+        if self.stop_time is not None:
+            time_left = (self.stop_time - now).total_seconds()
+            if time_left <= 0:
+                log.debug("Maximum total retry wait time exceeded")
+                return None
+        else:
+            time_left = None
         backoff = self.config.backoff(self.attempts)
         if response is None:
             # Connection/read/etc. error
@@ -848,18 +854,33 @@ class Retrier:
             if "Retry-After" in response.headers:
                 try:
                     delay = int(response.headers["Retry-After"]) + 1
-                    log.debug("Server responded with 403 and Retry-After header")
                 except ValueError:
                     delay = 0
+                else:
+                    log.debug("Server responded with 403 and Retry-After header")
+                    if time_left is not None and time_left < delay:
+                        log.debug(
+                            "Retrying after Retry-After would exceed maximum"
+                            " total retry wait time; not retrying"
+                        )
+                        return None
             elif "rate limit" in response.text:
                 if response.headers.get("x-ratelimit-remaining") == "0":
                     try:
                         reset = int(response.headers["x-ratelimit-reset"])
-                        log.debug("Primary rate limit exceeded; waiting for reset")
                     except (LookupError, ValueError):
                         delay = 0
                     else:
-                        delay = reset - time.time() + 1
+                        delay = reset - now.timestamp() + 1
+                        if time_left is not None and time_left < delay:
+                            log.debug(
+                                "Primary rate limit exceeded; waiting for reset"
+                                " would exceed maximum total retry wait time;"
+                                " not retrying"
+                            )
+                            return None
+                        else:
+                            log.debug("Primary rate limit exceeded; waiting for reset")
                 else:
                     log.debug("Secondary rate limit triggered")
                     delay = backoff
@@ -872,8 +893,7 @@ class Retrier:
             delay = backoff
         else:
             return None
-        if self.stop_time is not None:
-            time_left = (self.stop_time - now).total_seconds()
+        if time_left is not None:
             delay = min(time_left, delay)
         return max(delay, 0)
 

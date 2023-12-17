@@ -1,3 +1,9 @@
+v0.5.0 (in development)
+-----------------------
+- When a 403 response is received with a `Retry-After` or `x-ratelimit-reset`
+  header that would result in the next retry attempt being after `total_wait`
+  is exceeded, don't retry.
+
 v0.4.0 (2023-12-15)
 -------------------
 - Migrated from setuptools to hatch

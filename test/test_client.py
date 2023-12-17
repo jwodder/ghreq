@@ -1483,9 +1483,10 @@ def test_retry_intermixed_5xx_and_rate_limit(mocker: MockerFixture) -> None:
 
 
 @responses.activate
-def test_retry_total_wait_exceeded(mocker: MockerFixture) -> None:
+def test_retry_after_exceeds_total_wait(mocker: MockerFixture) -> None:
     responses.get(
         "https://github.example.com/api/greet",
+        body="Come back later.\n",
         status=403,
         headers={"Retry-After": "600"},
         match=(
@@ -1498,11 +1499,29 @@ def test_retry_total_wait_exceeded(mocker: MockerFixture) -> None:
             ),
         ),
     )
+    m = mocker.patch("time.sleep")
+    with Client(api_url="https://github.example.com/api") as client:
+        with pytest.raises(PrettyHTTPError) as exc:
+            client.get("greet")
+        assert str(exc.value) == (
+            "403 Client Error: Forbidden for URL:"
+            " https://github.example.com/api/greet\n"
+            "\n"
+            "Come back later.\n"
+        )
+    m.assert_not_called()
+
+
+@responses.activate
+def test_ratelimit_reset_exceeds_total_wait(mocker: MockerFixture) -> None:
     responses.get(
         "https://github.example.com/api/greet",
-        body="Hold on, it's almost ready.\n",
+        json={"message": "API rate limit exceeded"},
         status=403,
-        headers={"Retry-After": "2"},
+        headers={
+            "x-ratelimit-remaining": "0",
+            "x-ratelimit-reset": str(int(time() + 3500)),
+        },
         match=(
             responses.matchers.query_param_matcher({}),
             responses.matchers.header_matcher(
@@ -1513,14 +1532,7 @@ def test_retry_total_wait_exceeded(mocker: MockerFixture) -> None:
             ),
         ),
     )
-    start = nowdt()
-
-    def advance_clock(duration: float) -> None:
-        mocker.patch(
-            "ghreq.nowdt", return_value=start + timedelta(seconds=duration + 1)
-        )
-
-    m = mocker.patch("time.sleep", side_effect=advance_clock)
+    m = mocker.patch("time.sleep")
     with Client(api_url="https://github.example.com/api") as client:
         with pytest.raises(PrettyHTTPError) as exc:
             client.get("greet")
@@ -1528,10 +1540,11 @@ def test_retry_total_wait_exceeded(mocker: MockerFixture) -> None:
             "403 Client Error: Forbidden for URL:"
             " https://github.example.com/api/greet\n"
             "\n"
-            "Hold on, it's almost ready.\n"
+            "{\n"
+            '    "message": "API rate limit exceeded"\n'
+            "}"
         )
-    m.assert_called_once()
-    assert isclose(m.call_args.args[0], 300, rel_tol=0.3, abs_tol=0.1)
+    m.assert_not_called()
 
 
 @responses.activate
@@ -1564,6 +1577,49 @@ def test_retry_no_total_wait(mocker: MockerFixture) -> None:
         )
     assert m.call_count == 10
     expected = [0.1, 2, 4, 8, 16, 32, 64, 120, 120, 120]
+    delays = [ca.args[0] for ca in m.call_args_list]
+    for exp, actual in zip(expected, delays):
+        assert isclose(actual, exp, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_retry_5xx_past_total_wait(mocker: MockerFixture) -> None:
+    for i in range(1, 8):
+        responses.get(
+            "https://github.example.com/api/flakey",
+            body=f"Failed attempt #{i}",
+            status=500,
+            match=(
+                responses.matchers.query_param_matcher({}),
+                responses.matchers.header_matcher(
+                    {
+                        "Accept": DEFAULT_ACCEPT,
+                        "X-GitHub-Api-Version": DEFAULT_API_VERSION,
+                    }
+                ),
+            ),
+        )
+
+    now = nowdt()
+
+    def advance_clock(duration: float) -> None:
+        nonlocal now
+        now += timedelta(seconds=duration)
+
+    m = mocker.patch("time.sleep", side_effect=advance_clock)
+    mocker.patch("ghreq.nowdt", side_effect=lambda: now)
+    cfg = RetryConfig(backoff_base=2, total_wait=60)
+    with Client(api_url="https://github.example.com/api", retry_config=cfg) as client:
+        with pytest.raises(PrettyHTTPError) as exc:
+            client.get("/flakey")
+        assert str(exc.value) == (
+            "500 Server Error: Internal Server Error for URL:"
+            " https://github.example.com/api/flakey\n"
+            "\n"
+            "Failed attempt #7"
+        )
+    assert m.call_count == 6
+    expected = [0.1, 2, 4, 8, 16, 29.9]
     delays = [ca.args[0] for ca in m.call_args_list]
     for exp, actual in zip(expected, delays):
         assert isclose(actual, exp, rel_tol=0.3, abs_tol=0.1)

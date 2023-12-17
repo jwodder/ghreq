@@ -397,7 +397,9 @@ and subsequent retries happen after sleeping for ``backoff_factor *
 backoff_base ** (retry_number - 1) + random.random() * backoff_jitter``
 seconds, up to a maximum of ``backoff_max`` per retry.  If a ``Retry-After`` or
 ``x-ratelimit-reset`` header indicates a larger duration to sleep for, that
-value is used instead.
+value is used instead.  If the duration indicated by such a header would result
+in the next retry attempt being after ``total_wait`` is exceeded, retrying
+stops early.
 
 
 ``PrettyHTTPError`` Class
