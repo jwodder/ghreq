@@ -61,6 +61,31 @@ for Python 3 (You have pip, right?) to install it::
     python3 -m pip install ghreq
 
 
+Example
+=======
+
+.. code:: python
+
+    from ghreq import Client
+
+    with Client(token="your-api-token-here") as client:
+        user = client.get("/user")
+        print("I am user", user["login"])
+        print()
+
+        print("Here are my repositories:")
+        for repo in client.paginate("/user/repos"):
+            print(repo["full_name"])
+        print()
+
+        hello_world = client / "repos" / "octocat" / "Hello-World"
+        details = hello_world.get()
+        print(f"{details['full_name']} has been starred {details['stargazers_count']} times.")
+        print("Here is the first page of its open issues & PRs:")
+        for issue in (hello_world / "issues").get():
+            print(f"#{issue['number']}: {issue['title']}")
+
+
 API
 ===
 
