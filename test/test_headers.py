@@ -203,8 +203,8 @@ def test_custom_session_set_headers() -> None:
                     "X-Custom": "yes",
                     "Accept": DEFAULT_ACCEPT,
                     "Authorization": "Bearer hunter2",
-                    "user-agent": "Test/0.0.0",
-                    "x-github-api-version": "2525-01-01",
+                    "User-Agent": "Test/0.0.0",
+                    "X-GitHub-Api-Version": "2525-01-01",
                     "Y-Custom": "true",
                 }
             ),
