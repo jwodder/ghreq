@@ -503,8 +503,7 @@ class Client:
         headers: HeadersType = None,
         timeout: TimeoutType = None,
         raw: Literal[False] = False,
-    ) -> Iterator[dict]:
-        ...
+    ) -> Iterator[dict]: ...
 
     @overload
     def paginate(
@@ -515,8 +514,7 @@ class Client:
         headers: HeadersType = None,
         timeout: TimeoutType = None,
         raw: Literal[True],
-    ) -> Iterator[requests.Response]:
-        ...
+    ) -> Iterator[requests.Response]: ...
 
     def paginate(
         self,
@@ -747,8 +745,7 @@ class Endpoint:
         headers: HeadersType = None,
         timeout: TimeoutType = None,
         raw: Literal[False] = False,
-    ) -> Iterator[dict]:
-        ...
+    ) -> Iterator[dict]: ...
 
     @overload
     def paginate(
@@ -758,8 +755,7 @@ class Endpoint:
         headers: HeadersType = None,
         timeout: TimeoutType = None,
         raw: Literal[True],
-    ) -> Iterator[requests.Response]:
-        ...
+    ) -> Iterator[requests.Response]: ...
 
     def paginate(
         self,
