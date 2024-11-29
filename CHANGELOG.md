@@ -1,3 +1,7 @@
+v0.6.0 (in development)
+-----------------------
+- Support Python 3.13
+
 v0.5.0 (2023-12-17)
 -------------------
 - When a 403 response is received with a `Retry-After` or `x-ratelimit-reset`
