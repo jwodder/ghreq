@@ -79,18 +79,24 @@ DEFAULT_API_VERSION = "2022-11-28"
 MUTATING_METHODS = frozenset(["POST", "PATCH", "PUT", "DELETE"])
 
 if TYPE_CHECKING:
-    from typing import IO, List, Tuple, Union
-    from typing_extensions import Self, TypeAlias
+    from typing import IO, TypeAlias
+    from typing_extensions import Self
 
-    ParamsValue: TypeAlias = Union[
-        str, bytes, int, float, Iterable[Union[str, bytes, int, float]], None
-    ]
-    ParamsType: TypeAlias = Union[Mapping[str, ParamsValue], None]
-    HeadersType: TypeAlias = Union[Mapping[str, Union[str, bytes, None]], None]
-    DataType: TypeAlias = Union[
-        Iterable[bytes], str, bytes, IO, List[Tuple[Any, Any]], Mapping[Any, Any], None
-    ]
-    TimeoutType: TypeAlias = Union[float, Tuple[float, float], Tuple[float, None], None]
+    ParamsValue: TypeAlias = (
+        str | bytes | int | float | Iterable[str | bytes | int | float] | None
+    )
+    ParamsType: TypeAlias = Mapping[str, ParamsValue] | None
+    HeadersType: TypeAlias = Mapping[str, str | bytes | None] | None
+    DataType: TypeAlias = (
+        Iterable[bytes]
+        | str
+        | bytes
+        | IO
+        | list[tuple[Any, Any]]
+        | Mapping[Any, Any]
+        | None
+    )
+    TimeoutType: TypeAlias = float | tuple[float, float] | tuple[float, None] | None
 
 
 class Client:
