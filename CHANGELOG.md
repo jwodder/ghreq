@@ -2,6 +2,7 @@ v0.6.0 (in development)
 -----------------------
 - Support Python 3.13 and 3.14
 - Drop support for Python 3.8 and 3.9
+- Added a `Client.graphql()` method for making GraphQL requests
 
 v0.5.0 (2023-12-17)
 -------------------

@@ -348,6 +348,38 @@ returned iterator will yield each page as a ``requests.Response`` object.
 
 .. code:: python
 
+    Client.graphql(
+        query: str,
+        variables: dict[str, Any] | None = None,
+        *,
+        headers: HeadersType = None,
+        timeout: TimeoutType = None,
+        stream: bool = False,
+        raw: bool = False,
+    ) -> Any
+
+Perform a GraphQL API request.  Calling this method is similar to calling:
+
+.. code:: python
+
+    client.post(
+        "graphql",
+        json={"query": query, "variables": variables},
+        headers=headers,
+        timeout=timeout,
+        stream=stream,
+        raw=raw,
+    )
+
+except that there is no sleep for the mutation delay, and the following headers
+are changed unless overridden by the ``headers`` argument:
+
+- ``Accept``: set to ``"*/*"``
+- ``X-GitHub-Api-Version``: unset
+- ``X-Github-Next-Global-ID``: set to ``"1"``
+
+.. code:: python
+
     Client.close() -> None
 
 Close the client's internal ``requests.Session``.  No more request methods may
