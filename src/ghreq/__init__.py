@@ -256,6 +256,7 @@ class Client:
         allow_redirects: bool = True,
         stream: bool = False,
         raw: bool = False,
+        _mutation_sleep: bool = True,
     ) -> Any:
         """
         Perform an HTTP request with the given method/verb.  If ``path`` begins
@@ -293,7 +294,11 @@ class Client:
         method = method.upper()
         url = joinurl(self.api_url, path)
         log.debug("%s %s", method, url)
-        if method in MUTATING_METHODS and self.last_mutation is not None:
+        if (
+            _mutation_sleep
+            and method in MUTATING_METHODS
+            and self.last_mutation is not None
+        ):
             mutdelay = (
                 self.mutation_delay - (nowdt() - self.last_mutation).total_seconds()
             )
@@ -323,7 +328,7 @@ class Client:
         try:
             while True:
                 try:
-                    if method in MUTATING_METHODS:
+                    if _mutation_sleep and method in MUTATING_METHODS:
                         self.last_mutation = nowdt()
                     r = self.session.send(req, **send_kwargs)
                     r.raise_for_status()
@@ -565,6 +570,56 @@ class Client:
                     yield from itemses[0]
             path = r.links.get("next", {}).get("url")
             params = None
+
+    def graphql(
+        self,
+        query: str,
+        variables: dict[str, Any] | None = None,
+        *,
+        headers: HeadersType = None,
+        timeout: TimeoutType = None,
+        stream: bool = False,
+        raw: bool = False,
+    ) -> Any:
+        """
+        Perform a GraphQL API request.  Calling this method is similar to
+        calling:
+
+        .. code:: python
+
+            client.post(
+                "graphql",
+                json={"query": query, "variables": variables},
+                headers=headers,
+                timeout=timeout,
+                stream=stream,
+                raw=raw,
+            )
+
+        except that there is no sleep for the mutation delay, and the following
+        headers are changed unless overridden by the ``headers`` argument:
+
+        - ``Accept``: set to ``"*/*"``
+        - ``X-GitHub-Api-Version``: unset
+        - ``X-Github-Next-Global-ID``: set to ``"1"``
+        """
+        if headers is None:
+            headers = {}
+        else:
+            headers = {k.lower(): v for (k, v) in headers.items()}
+        headers.setdefault("x-github-next-global-id", "1")
+        headers.setdefault("x-github-api-version", None)
+        headers.setdefault("accept", "*/*")
+        return self.request(
+            "POST",
+            "graphql",
+            json={"query": query, "variables": variables},
+            headers=headers,
+            timeout=timeout,
+            stream=stream,
+            raw=raw,
+            _mutation_sleep=False,
+        )
 
     def close(self) -> None:
         """

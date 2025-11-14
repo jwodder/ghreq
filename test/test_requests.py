@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections.abc import Callable
 from datetime import timedelta
 from math import isclose
 import pytest
@@ -22,6 +23,22 @@ PNG = bytes.fromhex(
     "e5 52 0e 00 ad 42 f5 bf  85 4f 14 dc 46 b3 32 11"
     "6c b1 43 99 00 00 00 00  49 45 4e 44 ae 42 60 82"
 )
+
+
+def match_unset_headers(
+    headers: list[str],
+) -> Callable[[requests.PreparedRequest], tuple[bool, str]]:
+    def matcher(req: requests.PreparedRequest) -> tuple[bool, str]:
+        msg = []
+        for h in headers:
+            if h in req.headers:
+                msg.append(f"Header {h!r} unexpectedly in request")
+        if msg:
+            return (False, "; ".join(msg))
+        else:
+            return (True, "")
+
+    return matcher
 
 
 @responses.activate
@@ -733,3 +750,108 @@ def test_inter_mutation_sleep(mocker: MockerFixture) -> None:
         assert client.delete("/widgets/1") is None
         m.assert_called_once()
         assert isclose(m.call_args.args[0], 1.0, rel_tol=0.3, abs_tol=0.1)
+
+
+@responses.activate
+def test_graphql(mocker: MockerFixture) -> None:
+    QUERY = (
+        "query ($owner: String!, $name: String!) {\n"
+        "    repository (owner: $owner, name: $name) {\n"
+        "        description\n"
+        "    }\n"
+        "}\n"
+    )
+    responses.post(
+        "https://github.example.com/api/graphql",
+        json={
+            "data": {
+                "repository": {
+                    "description": "You're looking at it!",
+                }
+            }
+        },
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "accept": "*/*",
+                    "x-github-next-global-id": "1",
+                }
+            ),
+            match_unset_headers(["x-github-api-version"]),
+            responses.matchers.json_params_matcher(
+                {
+                    "query": QUERY,
+                    "variables": {"owner": "jwodder", "name": "ghreq"},
+                }
+            ),
+        ),
+    )
+    responses.post(
+        "https://github.example.com/api/graphql",
+        json={
+            "data": {"repository": None},
+            "errors": [{"type": "NOT_FOUND", "message": "No such repository"}],
+        },
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "accept": "*/*",
+                    "x-github-next-global-id": "1",
+                }
+            ),
+            match_unset_headers(["x-github-api-version"]),
+            responses.matchers.json_params_matcher(
+                {
+                    "query": QUERY,
+                    "variables": {"owner": "jwodder", "name": "nonexistent"},
+                }
+            ),
+        ),
+    )
+    responses.post(
+        "https://github.example.com/api/graphql",
+        json={
+            "data": {
+                "repository": {
+                    "description": "This is a test.",
+                }
+            }
+        },
+        match=(
+            responses.matchers.query_param_matcher({}),
+            responses.matchers.header_matcher(
+                {
+                    "accept": "application/json",
+                    "x-github-next-global-id": "2",
+                    "x-github-api-version": "1970-01-01",
+                }
+            ),
+            responses.matchers.json_params_matcher(
+                {
+                    "query": QUERY,
+                    "variables": {"owner": "jwodder", "name": "test"},
+                }
+            ),
+        ),
+    )
+    m = mocker.patch("time.sleep")
+    with Client(api_url="https://github.example.com/api") as client:
+        assert client.graphql(QUERY, {"owner": "jwodder", "name": "ghreq"}) == {
+            "data": {"repository": {"description": "You're looking at it!"}}
+        }
+        assert client.graphql(QUERY, {"owner": "jwodder", "name": "nonexistent"}) == {
+            "data": {"repository": None},
+            "errors": [{"type": "NOT_FOUND", "message": "No such repository"}],
+        }
+        assert client.graphql(
+            QUERY,
+            {"owner": "jwodder", "name": "test"},
+            headers={
+                "X-Github-Next-Global-ID": "2",
+                "X-GitHub-Api-Version": "1970-01-01",
+                "Accept": "application/json",
+            },
+        ) == {"data": {"repository": {"description": "This is a test."}}}
+    m.assert_not_called()
