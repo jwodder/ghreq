@@ -1,5 +1,5 @@
-v0.7.0 (in development)
------------------------
+v0.7.0 (2025-11-28)
+-------------------
 - Support for making GraphQL requests to custom URLs:
     - Gave the `Client` constructor a `graphql_url` argument
     - Gave `Client.graphql()` an optional `path` argument
