@@ -49,7 +49,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Any, Literal, overload
 import requests
 
-__version__ = "0.6.0"
+__version__ = "0.7.0.dev1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "ghreq@varonathe.org"
 __license__ = "MIT"
@@ -61,6 +61,7 @@ __all__ = [
     "PrettyHTTPError",
     "RetryConfig",
     "get_github_api_url",
+    "get_github_graphql_url",
     "make_user_agent",
 ]
 
@@ -71,6 +72,9 @@ DEFAULT_ACCEPT = "application/vnd.github+json"
 
 #: The default value of the ``api_url`` argument to the `Client` constructor
 DEFAULT_API_URL = "https://api.github.com"
+
+#: The default value returned by `get_github_graphql_url()`
+DEFAULT_GRAPHQL_URL = "https://api.github.com/graphql"
 
 #: The default value of the ``api_version`` argument to the `Client`
 #: constructor
@@ -118,6 +122,7 @@ class Client:
         *,
         token: str | None = None,
         api_url: str = DEFAULT_API_URL,
+        graphql_url: str | None = None,
         session: requests.Session | None = None,
         set_headers: bool | None = None,
         user_agent: str | None = None,
@@ -136,6 +141,10 @@ class Client:
 
         :param api_url:
             The base URL to which to append paths passed to the request methods
+
+        :param graphql_url:
+            The default URL to which requests made with the `Client.graphql()`
+            method will be sent; defaults to ``f"{api_url}/graphql"``
 
         :param session:
             A pre-configured `requests.Session` instance to use for making
@@ -203,6 +212,9 @@ class Client:
         """
 
         self.api_url = api_url
+        if graphql_url is None:
+            graphql_url = joinurl(api_url, "graphql")
+        self.graphql_url = graphql_url
         if session is None:
             session = requests.Session()
             if set_headers is None:
@@ -576,6 +588,7 @@ class Client:
         query: str,
         variables: dict[str, Any] | None = None,
         *,
+        path: str | None = None,
         headers: HeadersType = None,
         timeout: TimeoutType = None,
         stream: bool = False,
@@ -588,7 +601,7 @@ class Client:
         .. code:: python
 
             client.post(
-                "graphql",
+                path or self.graphql_url,
                 json={"query": query, "variables": variables},
                 headers=headers,
                 timeout=timeout,
@@ -612,7 +625,7 @@ class Client:
         headers.setdefault("accept", "*/*")
         return self.request(
             "POST",
-            "graphql",
+            self.graphql_url if path is None else path,
             json={"query": query, "variables": variables},
             headers=headers,
             timeout=timeout,
@@ -636,11 +649,12 @@ class Client:
 class Endpoint:
     """
     A combination of a `Client` instance and a URL.  `Endpoint` has
-    `request()`, `get()`, `post()`, `put()`, `patch()`, `delete()`, and
-    `paginate()` methods that work the same way as for `Client`, except that
-    `Endpoint`'s methods do not take ``path`` arguments; instead, they make
-    requests to the stored URL.  This is useful if you find yourself making
-    requests to the same URL and/or paths under the same URL over & over.
+    `request()`, `get()`, `post()`, `put()`, `patch()`, `delete()`,
+    `paginate()`, and `graphql()` methods that work the same way as for
+    `Client`, except that `Endpoint`'s methods do not take ``path`` arguments;
+    instead, they make requests to the stored URL.  This is useful if you find
+    yourself making requests to the same URL and/or paths under the same URL
+    over & over.
 
     An `Endpoint` instance is constructed by applying the ``/`` (division)
     operator to a `Client` or `Endpoint` instance on the left and a string on
@@ -830,6 +844,26 @@ class Endpoint:
             self.url, params=params, headers=headers, timeout=timeout, raw=raw
         )
 
+    def graphql(
+        self,
+        query: str,
+        variables: dict[str, Any] | None = None,
+        *,
+        headers: HeadersType = None,
+        timeout: TimeoutType = None,
+        stream: bool = False,
+        raw: bool = False,
+    ) -> Any:
+        return self.client.graphql(
+            query=query,
+            variables=variables,
+            path=self.url,
+            headers=headers,
+            timeout=timeout,
+            stream=stream,
+            raw=raw,
+        )
+
 
 @dataclass
 class RetryConfig:
@@ -1013,6 +1047,15 @@ def get_github_api_url() -> str:
     string, that string is returned; otherwise, `DEFAULT_API_URL` is returned.
     """
     return os.environ.get("GITHUB_API_URL") or DEFAULT_API_URL
+
+
+def get_github_graphql_url() -> str:
+    """
+    If the :envvar:`GITHUB_GRAPHQL_URL` environment variable is set to a
+    nonempty string, that string is returned; otherwise, `DEFAULT_GRAPHQL_URL`
+    is returned.
+    """
+    return os.environ.get("GITHUB_GRAPHQL_URL") or DEFAULT_GRAPHQL_URL
 
 
 def nowdt() -> datetime:

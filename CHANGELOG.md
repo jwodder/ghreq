@@ -1,3 +1,11 @@
+v0.7.0 (in development)
+-----------------------
+- Support for making GraphQL requests to custom URLs:
+    - Gave the `Client` constructor a `graphql_url` argument
+    - Gave `Client.graphql()` an optional `path` argument
+    - Gave `Endpoint` a `graphql()` method
+    - Added a `get_github_graphql_url()` method
+
 v0.6.0 (2025-11-14)
 -------------------
 - Support Python 3.13 and 3.14
