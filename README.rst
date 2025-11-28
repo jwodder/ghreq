@@ -101,6 +101,7 @@ API
             *,
             token: str | None = None,
             api_url: str = DEFAULT_API_URL,
+            graphql_url: str | None = None,
             session: requests.Session | None = None,
             set_headers: bool | None = None,
             user_agent: str | None = None,
@@ -123,6 +124,10 @@ Constructor arguments:
 
 ``api_url``
     The base URL to which to append paths passed to the request methods
+
+``graphql_url``
+    The default URL to which requests made with the ``Client.graphql()`` method
+    will be sent; defaults to ``f"{api_url}/graphql"``
 
 ``session``
     A pre-configured ``requests.Session`` instance to use for making requests.
@@ -352,6 +357,7 @@ returned iterator will yield each page as a ``requests.Response`` object.
         query: str,
         variables: dict[str, Any] | None = None,
         *,
+        path: str | None = None,
         headers: HeadersType = None,
         timeout: TimeoutType = None,
         stream: bool = False,
@@ -363,7 +369,7 @@ Perform a GraphQL API request.  Calling this method is similar to calling:
 .. code:: python
 
     client.post(
-        "graphql",
+        path or self.graphql_url,
         json={"query": query, "variables": variables},
         headers=headers,
         timeout=timeout,
@@ -399,11 +405,12 @@ manager.
         url: str
 
 A combination of a ``Client`` instance and a URL.  ``Endpoint`` has
-``request()``, ``get()``, ``post()``, ``put()``, ``patch()``, ``delete()``, and
-``paginate()`` methods that work the same way as for ``Client``, except that
-``Endpoint``'s methods do not take ``path`` arguments; instead, they make
-requests to the stored URL.  This is useful if you find yourself making
-requests to the same URL and/or paths under the same URL over & over.
+``request()``, ``get()``, ``post()``, ``put()``, ``patch()``, ``delete()``,
+``paginate()``, and ``graphql()`` methods that work the same way as for
+``Client``, except that ``Endpoint``'s methods do not take ``path`` arguments;
+instead, they make requests to the stored URL.  This is useful if you find
+yourself making requests to the same URL and/or paths under the same URL over &
+over.
 
 An ``Endpoint`` instance is constructed by applying the ``/`` (division)
 operator to a ``Client`` or ``Endpoint`` instance on the left and a string on
@@ -496,6 +503,12 @@ The default value of the ``api_url`` argument to the ``Client`` constructor
 
 The default value of the ``api_version`` argument to the ``Client`` constructor
 
+.. code:: python
+
+    DEFAULT_GRAPHQL_URL = "https://api.github.com/graphql"
+
+The default value returned by ``get_github_graphql_url()``
+
 
 Utility Functions
 -----------------
@@ -514,3 +527,10 @@ library used and the implemention & version of Python.
 
 If the ``GITHUB_API_URL`` environment variable is set to a nonempty string,
 that string is returned; otherwise, ``DEFAULT_API_URL`` is returned.
+
+.. code:: python
+
+    get_github_graphql_url() -> str:
+
+If the ``GITHUB_GRAPHQL_URL`` environment variable is set to a nonempty string,
+that string is returned; otherwise, ``DEFAULT_GRAPHQL_URL`` is returned.

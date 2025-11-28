@@ -1,24 +1,8 @@
 from __future__ import annotations
-from collections.abc import Callable
 import requests
 import responses
+from testinglib import match_unset_headers
 from ghreq import DEFAULT_ACCEPT, DEFAULT_API_VERSION, Client
-
-
-def match_unset_headers(
-    headers: list[str],
-) -> Callable[[requests.PreparedRequest], tuple[bool, str]]:
-    def matcher(req: requests.PreparedRequest) -> tuple[bool, str]:
-        msg = []
-        for h in headers:
-            if h in req.headers:
-                msg.append(f"Header {h!r} unexpectedly in request")
-        if msg:
-            return (False, "; ".join(msg))
-        else:
-            return (True, "")
-
-    return matcher
 
 
 @responses.activate
