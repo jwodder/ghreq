@@ -1,3 +1,12 @@
+v0.8.0 (in development)
+-----------------------
+- Updated the default value of the ``X-GitHub-Api-Version`` header to
+  "2026-03-10", up from "2022-11-28".  See `the GitHub documentation`__ for
+  information on breaking changes in the new API version.
+
+__ https://docs.github.com/en/rest/about-the-rest-api/breaking-changes#version-2026-03-10
+
+
 v0.7.0 (2025-11-28)
 -------------------
 - Support for making GraphQL requests to custom URLs:

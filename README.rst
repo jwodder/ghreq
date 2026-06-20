@@ -52,7 +52,7 @@ aimed at working with the GitHub REST API.  Notable features include:
 
 .. _requests: https://requests.readthedocs.io
 
-__ https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api?#handle-rate-limit-errors-appropriately
+__ https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api#handle-rate-limit-errors-appropriately
 
 Installation
 ============
@@ -498,7 +498,7 @@ The default value of the ``api_url`` argument to the ``Client`` constructor
 
 .. code:: python
 
-    DEFAULT_API_VERSION = "2022-11-28"
+    DEFAULT_API_VERSION = "2026-03-10"
 
 The default value of the ``api_version`` argument to the ``Client`` constructor
 

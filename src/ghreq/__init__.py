@@ -29,8 +29,9 @@ aimed at working with the GitHub REST API.  Notable features include:
 
 .. _requests: https://requests.readthedocs.io
 
-__ https://docs.github.com/en/rest/guides/best-practices-for-using-the-rest-api
-   ?apiVersion=2022-11-28#dealing-with-rate-limits
+__ https://docs.github.com/en/rest/using-the-rest-api
+   /best-practices-for-using-the-rest-api
+   #handle-rate-limit-errors-appropriately
 
 Visit <https://github.com/jwodder/ghreq> for more information.
 """
@@ -49,7 +50,7 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Any, Literal, overload
 import requests
 
-__version__ = "0.7.0"
+__version__ = "0.8.0.dev1"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "ghreq@varonathe.org"
 __license__ = "MIT"
@@ -78,7 +79,7 @@ DEFAULT_GRAPHQL_URL = "https://api.github.com/graphql"
 
 #: The default value of the ``api_version`` argument to the `Client`
 #: constructor
-DEFAULT_API_VERSION = "2022-11-28"
+DEFAULT_API_VERSION = "2026-03-10"
 
 MUTATING_METHODS = frozenset(["POST", "PATCH", "PUT", "DELETE"])
 
