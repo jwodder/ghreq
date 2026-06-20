@@ -52,8 +52,7 @@ aimed at working with the GitHub REST API.  Notable features include:
 
 .. _requests: https://requests.readthedocs.io
 
-__ https://docs.github.com/en/rest/guides/best-practices-for-using-the-rest-api
-   ?apiVersion=2022-11-28#dealing-with-rate-limits
+__ https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api?#handle-rate-limit-errors-appropriately
 
 Installation
 ============
