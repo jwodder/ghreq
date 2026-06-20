@@ -1,5 +1,5 @@
-v0.8.0 (in development)
------------------------
+v0.8.0 (2026-06-20)
+-------------------
 - Updated the default value of the ``X-GitHub-Api-Version`` header to
   "2026-03-10", up from "2022-11-28".  See `the GitHub documentation`__ for
   information on breaking changes in the new API version.
@@ -15,17 +15,20 @@ v0.7.0 (2025-11-28)
     - Gave `Endpoint` a `graphql()` method
     - Added a `get_github_graphql_url()` method
 
+
 v0.6.0 (2025-11-14)
 -------------------
 - Support Python 3.13 and 3.14
 - Drop support for Python 3.8 and 3.9
 - Added a `Client.graphql()` method for making GraphQL requests
 
+
 v0.5.0 (2023-12-17)
 -------------------
 - When a 403 response is received with a `Retry-After` or `x-ratelimit-reset`
   header that would result in the next retry attempt being after `total_wait`
   is exceeded, don't retry.
+
 
 v0.4.0 (2023-12-15)
 -------------------
@@ -36,10 +39,12 @@ v0.4.0 (2023-12-15)
 - Added `allow_redirects` argument to `Client.request()` and
   `Endpoint.request()`
 
+
 v0.3.1 (2023-11-13)
 -------------------
 - Adjusted the type hints on `PrettyHTTPError` to indicate that the `response`
   attribute is always non-`None`
+
 
 v0.3.0 (2023-11-10)
 -------------------
@@ -49,14 +54,17 @@ v0.3.0 (2023-11-10)
   additional headers without having to use a custom `Session`
 - Gave `Client` a `close()` method
 
+
 v0.2.0 (2023-11-03)
 -------------------
 - The `version` argument to `make_user_agent()` is now optional
 - The `url` argument to `make_user_agent()` is now actually optional
 
+
 v0.1.1 (2023-10-21)
 -------------------
 - Fix the type annotation on `Client.__enter__` to support subclassing
+
 
 v0.1.0 (2023-10-21)
 -------------------
