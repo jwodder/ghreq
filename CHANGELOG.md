@@ -1,3 +1,8 @@
+v0.9.0 (in development)
+-----------------------
+- Support Python 3.15
+
+
 v0.8.0 (2026-06-20)
 -------------------
 - Updated the default value of the ``X-GitHub-Api-Version`` header to
